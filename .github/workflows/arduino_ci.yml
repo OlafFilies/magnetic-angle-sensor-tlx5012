@@ -84,7 +84,7 @@ jobs:
         run: |
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
-          python py_checkusb.py --switch repo --namelist REPO --onoff on
+          python py_checkusb.py --switch repo --namelist $REPO --onoff on
 
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
     outputs:
