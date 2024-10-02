@@ -293,16 +293,38 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
-          declare -a type
-          declare -a serialnum
+          declare -a typelist
+          declare -a seriallist
 
-          mapfile -t type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
-          echo "T1 ${type[@]}"
+          mapfile -t typelist < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
 
-          for typekey in "${type[@]}"; 
+          for TYPE in "${typelist[@]}"; 
           do
-            mapfile -t serialnum < <(python ./py_checkusb.py --type ${typekey} --batch)
-            echo "Type: $typekey $serialnum"
+            declare -a serials
+            mapfile -t seriallist < <(python ./py_checkusb.py --type ${TYPE} --batch)
+            for line in "${seriallist[@]}"; do
+              readarray -td, serials <<<"$line"
+              
+              export HEXNAME=${serials[3]}
+              export SERIAL_NUM=${serials[2]}
+              export DEVICE==${serials[3]}
+              export PORT=`./find_usb.sh $SERIAL_NUM`
+              
+              echo "Type: $typekey $serialnum,line,serials"
+
+
+              echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
+              echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+              echo "Build HEX name:      " $HEXNAME
+              echo "Port Serial Num:     " $SERIAL_NUM
+              echo "Flash device:        " $DEVICE
+              echo "Port found:          " $PORT
+              echo "Board type name:     " $TYPE
+
+            done
+
+
+
           done
 
           #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
@@ -312,8 +334,6 @@ jobs:
           #export PORT=`./find_usb.sh $SERIAL_NUM`
           #export PATH=$PATH:/opt/runner_support/Unity
 
-          #echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-          #echo "Real repo name:      " ${{ needs.setup.outputs.project }}
           #echo "Build HEX name:      " $HEXNAME
           #echo "Port Serial Num:     " $SERIAL_NUM
           #echo "Port found:          " $PORT
