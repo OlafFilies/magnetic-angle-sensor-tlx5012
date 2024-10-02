@@ -303,16 +303,13 @@ jobs:
           do
             declare -a serials
             mapfile -t seriallist < <(python ./py_checkusb.py --type ${TYPE} --batch)
-            for line in "${seriallist[@]}"; do
+            for line in "${seriallist[@]}";
+            do
               readarray -td, serials <<<"$line"
-              
               export SERIAL_NUM=${serials[2]}
               export HEXNAME=${serials[3]}
               export DEVICE=${serials[4]}
               export PORT=`./find_usb.sh $SERIAL_NUM`
-              
-              echo "Type: $line,$serials"
-
 
               echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
               echo "Real repo name:      " ${{ needs.setup.outputs.project }}
@@ -325,30 +322,15 @@ jobs:
               cd $HOME
               python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
 
-              done
-
-            # Repo name extracted:  xensiv-angle-sensor-tlx5012
-            # Real repo name:       XENSIV_TLx5012B_Angle_Sensor
-            # Build HEX name:       Infineon.xmc.XMC1100_XMC2GO
-            # Port Serial Num:      000591132024
-            # Port found:           /dev/ttyACM3
-            # Flash device:         XMC1100-0064
-
+            done
           done
-
-          #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
-          #export PORT=`./find_usb.sh $SERIAL_NUM`
-
-          #echo "Build HEX name:      " $HEXNAME
-          #echo "Port Serial Num:     " $SERIAL_NUM
-          #echo "Port found:          " $PORT
-          #echo "Flash device:        " $DEVICE
-          #echo "Board type name:     " $TYPE
-
 
       - name: Monitor
         run: |
           cd /opt/runner_support/
+
+
+
           #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
           #export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
           #export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
