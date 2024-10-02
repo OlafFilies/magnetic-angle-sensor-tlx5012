@@ -295,12 +295,12 @@ jobs:
           declare -a type
           declare -a serialnum
 
-          python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch
           readarray -td type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
-          echo ${type[@]}
+          echo "T1 ${type[@]}"
 
           for typekey in "${!type[@]}"; do
-            echo "Type: $typekey ${type[$typekey]}"
+            readarray -td serialnum < <(python ./py_checkusb.py --type ${typekey} --batch)
+            echo "Type: $typekey $serialnum"
           done
 
           #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
