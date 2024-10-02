@@ -296,12 +296,12 @@ jobs:
           declare -a type
           declare -a serialnum
 
-          readarray -td type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
+          mapfile -t type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
           echo "T1 ${type[@]}"
 
           for typekey in "${type[@]}"; 
           do
-            readarray -td serialnum < <(python ./py_checkusb.py --type ${typekey} --batch)
+            mapfile -t serialnum < <(python ./py_checkusb.py --type ${typekey} --batch)
             echo "Type: $typekey $serialnum"
           done
 
