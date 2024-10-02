@@ -292,35 +292,45 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
-          export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
-          export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
-          export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
-          export TYPE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.$REPO.type`
-          export PORT=`./find_usb.sh $SERIAL_NUM`
-          export PATH=$PATH:/opt/runner_support/Unity
+          declare -a type
+          declare -a serialnum
 
-          echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-          echo "Real repo name:      " ${{ needs.setup.outputs.project }}
-          echo "Build HEX name:      " $HEXNAME
-          echo "Port Serial Num:     " $SERIAL_NUM
-          echo "Port found:          " $PORT
-          echo "Flash device:        " $DEVICE
-          echo "Board type name:     " $TYPE
+          readarray -d type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
+          echo ${type[@]}
 
-          cd $HOME
-          python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+          for typekey in "${!type[@]}"; do
+            echo "Type: $typekey ${type[$typekey]}"
+          done
+
+          #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          #export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
+          #export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
+          #export TYPE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.$REPO.type`
+          #export PORT=`./find_usb.sh $SERIAL_NUM`
+          #export PATH=$PATH:/opt/runner_support/Unity
+
+          #echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
+          #echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+          #echo "Build HEX name:      " $HEXNAME
+          #echo "Port Serial Num:     " $SERIAL_NUM
+          #echo "Port found:          " $PORT
+          #echo "Flash device:        " $DEVICE
+          #echo "Board type name:     " $TYPE
+
+          #cd $HOME
+          #python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
 
       - name: Monitor
         run: |
           cd /opt/runner_support/
-          export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
-          export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
-          export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
-          export PORT=`./find_usb.sh $SERIAL_NUM`
-          /opt/runner_support/py_console.py --port $PORT
+          #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          #export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
+          #export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
+          #export PORT=`./find_usb.sh $SERIAL_NUM`
+          #/opt/runner_support/py_console.py --port $PORT
 
       - name: HIL switch off
         run: |
           cd /opt/runner_support/
-          REPO="$(basename "$GITHUB_REPOSITORY")"
-          python py_checkusb.py --switch repo --namelist REPO --onoff off
+          #REPO="$(basename "$GITHUB_REPOSITORY")"
+          #python py_checkusb.py --switch repo --namelist REPO --onoff offbo
