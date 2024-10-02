@@ -256,10 +256,10 @@ jobs:
         # include additional information for each fqbn, in this case the platform name to install
         # port_name: the name of the yaml structure in the board2port.yaml, there can be more than one hardware attached
         # device: the device name the yaml structure in the board2port.yaml, there can be more than one hardware attached
-        include:
-        - fqbn:      "Infineon:xmc:XMC1100_XMC2GO"
-          port_name: "port_serial.0"
-          device:    "device.0"
+        # include:
+        # - fqbn:      "Infineon:xmc:XMC1100_XMC2GO"
+        #   port_name: "port_serial.0"
+        #   device:    "device.0"
 
     # These are the steps which should run for each combination of fqbn and example code
     steps:
@@ -295,6 +295,7 @@ jobs:
           cd /opt/runner_support/
           declare -a typelist
           declare -a seriallist
+          export PATH=$PATH:/opt/runner_support/Unity
 
           mapfile -t typelist < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
 
@@ -305,9 +306,9 @@ jobs:
             for line in "${seriallist[@]}"; do
               readarray -td, serials <<<"$line"
               
-              export HEXNAME=${serials[3]}
               export SERIAL_NUM=${serials[2]}
-              export DEVICE=${serials[3]}
+              export HEXNAME=${serials[3]}
+              export DEVICE=${serials[4]}
               export PORT=`./find_usb.sh $SERIAL_NUM`
               
               echo "Type: $line,$serials"
@@ -321,7 +322,10 @@ jobs:
               echo "Port found:          " $PORT
               echo "Board type name:     " $TYPE
 
-            done
+              cd $HOME
+              python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+
+              done
 
             # Repo name extracted:  xensiv-angle-sensor-tlx5012
             # Real repo name:       XENSIV_TLx5012B_Angle_Sensor
@@ -333,11 +337,7 @@ jobs:
           done
 
           #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
-          #export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
-          #export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
-          #export TYPE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.$REPO.type`
           #export PORT=`./find_usb.sh $SERIAL_NUM`
-          #export PATH=$PATH:/opt/runner_support/Unity
 
           #echo "Build HEX name:      " $HEXNAME
           #echo "Port Serial Num:     " $SERIAL_NUM
@@ -345,8 +345,6 @@ jobs:
           #echo "Flash device:        " $DEVICE
           #echo "Board type name:     " $TYPE
 
-          #cd $HOME
-          #python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
 
       - name: Monitor
         run: |
