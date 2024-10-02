@@ -50,12 +50,13 @@ jobs:
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           cd $GITHUB_WORKSPACE/src/framework/arduino
-            data=()
+          data=()
           for x in examples/*;
           do 
             data+=($x);
           done;
-            export mvar=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
+          
+          export mvar=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo matrix="$mvar" >> $GITHUB_OUTPUT
 
           cd $GITHUB_WORKSPACE/.github
@@ -298,7 +299,8 @@ jobs:
           readarray -td type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
           echo "T1 ${type[@]}"
 
-          for typekey in "${!type[@]}"; do
+          for typekey in "${type[@]}"; 
+          do
             readarray -td serialnum < <(python ./py_checkusb.py --type ${typekey} --batch)
             echo "Type: $typekey $serialnum"
           done
