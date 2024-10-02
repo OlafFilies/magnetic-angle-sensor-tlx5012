@@ -295,7 +295,7 @@ jobs:
           declare -a type
           declare -a serialnum
 
-          `python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch`
+          python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch
           readarray -td type < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
           echo ${type[@]}
 
