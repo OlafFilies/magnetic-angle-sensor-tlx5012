@@ -301,29 +301,33 @@ jobs:
         run: |
           cd /opt/runner_support/
           declare -a devicelist
+          export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
 
-          echo "fqbn: ${{ matrix.fqbn }}"
+          echo "Build HEX name:      " $HEXNAME
+          echo "Port Serial Num:     " ${{ needs.setup.outputs.serials_hil }}
 
-          mapfile -t devicelist < <(python ./py_checkusb.py --serial ${{ matrix.fqbn }} --batch)
-          for line in "${devicelist[@]}";
-          do
-            readarray -td, device <<<"$line"
-            export SERIAL_NUM=${{ matrix.fqbn }}
-            export HEXNAME=${device[1]}
-            export DEVICE=${device[2]}
-            export PORT=`./find_usb.sh $SERIAL_NUM`
 
-            echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-            echo "Real repo name:      " ${{ needs.setup.outputs.project }}
-            echo "Build HEX name:      " $HEXNAME
-            echo "Port Serial Num:     " $SERIAL_NUM
-            echo "Flash device:        " $DEVICE
-            echo "Port found:          " $PORT
-            echo "Board type name:     " $TYPE
 
-            cd $HOME
-            python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
-          done 
+          # mapfile -t devicelist < <(python ./py_checkusb.py --serial ${HEXNAME} --batch)
+          # for line in "${devicelist[@]}";
+          # do
+          #   readarray -td, device <<<"$line"
+          #   export SERIAL_NUM=${{ matrix.fqbn }}
+          #   export HEXNAME=${device[1]}
+          #   export DEVICE=${device[2]}
+          #   export PORT=`./find_usb.sh $SERIAL_NUM`
+
+          #   echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
+          #   echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+          #   echo "Build HEX name:      " $HEXNAME
+          #   echo "Port Serial Num:     " $SERIAL_NUM
+          #   echo "Flash device:        " $DEVICE
+          #   echo "Port found:          " $PORT
+          #   echo "Board type name:     " $TYPE
+
+          #   cd $HOME
+          #   python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+          # done 
 
 
       - name: Monitor
