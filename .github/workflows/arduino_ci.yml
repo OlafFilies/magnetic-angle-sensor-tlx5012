@@ -308,8 +308,13 @@ jobs:
 
           devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
           for line in "${devicelist[@]}"; do
+            echo "Line: " $line
             readarray -td, device <<<"$line"
             echo "Device: " ${device[@]}
+            echo "Device one: " ${device[1]}
+            
+            
+            
             if [[ $device[1] =~ "$HEXNAME" ]]; then
               echo "Device list: " $device
             fi
