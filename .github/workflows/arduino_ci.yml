@@ -306,9 +306,9 @@ jobs:
           serials=${{ fromJson(needs.setup.outputs.serials_hil) }}
 
           echo "Build HEX name:      " $HEXNAME
-          echo "Port Serial Num:     " $serials
+          echo "Port Serial Num:     " ${serials[@]}
 
-          for serial in $serials; do
+          for serial in ${serials[@]}; do
             echo "Serial: " $serial
             devicelist+=($(./py_checkusb.py --serial $serial --batch))
             for line in "${devicelist[@]}"; do
