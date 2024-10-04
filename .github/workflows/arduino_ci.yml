@@ -44,17 +44,11 @@ jobs:
       # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: set-matrix
         run: |
-          # Fetch the repository name
           REPO="$(basename "$GITHUB_REPOSITORY")"
           echo "repo=$REPO" >> $GITHUB_OUTPUT
-
-          # Fetch the project name from the xfp-dev arduino workspace-setup
           export $(xfp-dev arduino workspace-setup project-name)
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
-          # Fetch the example data
-
-          # Fetch the examples from the library
           cd $GITHUB_WORKSPACE/src/framework/arduino
           declare -a data
           for x in examples/*;
@@ -64,26 +58,19 @@ jobs:
           export mvar=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo matrix_example="$mvar" >> $GITHUB_OUTPUT
 
-          # Fetch the fqbn from the fqbn.yml
           cd $GITHUB_WORKSPACE/.github
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
-          # Fetch the HIL information
           eexmp=`cat ./fqbn.yml | shyaml get-value hil.example`
           efqbn=`cat ./fqbn.yml | shyaml get-value hil.fqbn`
           echo "matrix_hil=$eexmp" >> $GITHUB_OUTPUT
           echo "fqbn_hil=$efqbn" >> $GITHUB_OUTPUT
 
-          echo "fqbn_hil=$efqbn"
-          echo "matrix_hil=$eexmp"
-
           cd /opt/runner_support/
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
           declare -a typelist
           declare -a seriallist
-
-          # Fetch the serial numbers for the HIL
           mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
           for TYPE in "${typelist[@]}"; 
           do
@@ -117,6 +104,7 @@ jobs:
 
       matrix_example: ${{ steps.set-matrix.outputs.matrix_example }}
       fqbn_example: ${{ steps.set-matrix.outputs.fqbn_example }}
+      
       matrix_hil: ${{ steps.set-matrix.outputs.matrix_hil }}
       fqbn_hil: ${{ steps.set-matrix.outputs.fqbn_hil }}
       serials_hil: ${{ steps.set-matrix.outputs.serials_hil }}
@@ -270,7 +258,7 @@ jobs:
       # the code to flash
       matrix:
       # the code to flash
-        example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
+        example: ${{ fromJson(needs.setup.outputs.matrix_hil) }}
 
         # board packages we want to run
         # attention the matrix spans over the fqbn not platform so that we can choose different boards
