@@ -267,6 +267,7 @@ jobs:
         # this example compiles each sample code for Arduino Uno, XMC2Go and XMC4700 boards
         fqbn: ${{ fromJson(needs.setup.outputs.fqbn_hil) }}
 
+        # the serials of the hardware boards
         serials: ${{ fromJson(needs.setup.outputs.serials_hil) }}
 
     # These are the steps which should run for each combination of fqbn and example code
@@ -305,29 +306,22 @@ jobs:
           declare -a serials
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
 
+          devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
+          for line in "${devicelist[@]}"; do
+            readarray -td, device <<<"$line"
+            echo "Device: " ${device[@]}
+            if [[ $device[1] =~ "$HEXNAME" ]]; then
+              echo "Device list: " $device
+            fi
+          done
+
+
           echo "fqbn: " ${{ matrix.fqbn }}
           echo "serials: " ${{ matrix.serials }}
 
 
           echo "Build HEX name:      " $HEXNAME
-          echo "Port Serial Num:     " ${serials[@]}
-
-          for serial in ${serials[@]}; do
-            echo "Serial: " $serial
-            devicelist+=($(./py_checkusb.py --serial $serial --batch))
-            for line in "${devicelist[@]}"; do
-              readarray -td, device <<<"$line"
-              echo "Device: " $device
-              if [[ $device[1] =~ "$HEXNAME" ]]; then
-                echo "Device list: " $device
-              fi
-            done
-
-
-          done;
-          echo "Device list: " $devicelist
-
-
+ 
 
           # for line in "${devicelist[@]}";
           # do
