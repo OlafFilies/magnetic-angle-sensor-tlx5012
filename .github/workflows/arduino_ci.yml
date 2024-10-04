@@ -303,7 +303,7 @@ jobs:
           declare -a devicelist
           declare -a serials
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
-          serials=${{ fromJson(needs.setup.outputs.serials_hil) }}
+          serials=(${{ fromJson(needs.setup.outputs.serials_hil) }})
 
           echo "Build HEX name:      " $HEXNAME
           echo "Port Serial Num:     " ${serials[@]}
