@@ -75,11 +75,14 @@ jobs:
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
           declare -a typelist
           declare -a seriallist
+          
           mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
           for TYPE in "${typelist[@]}"; 
           do
-            echo ${TYPE[2]}
-            seriallist+=(${TYPE[2]})
+            declare -a serials
+            readarray -td, serials <<<"$TYPE"
+            echo ${serials[2]}
+            seriallist+=(${serials[2]})
           done;
           echo seriallist="$seriallist"
           export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
