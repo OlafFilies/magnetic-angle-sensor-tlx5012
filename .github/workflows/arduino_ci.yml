@@ -307,31 +307,44 @@ jobs:
           echo "Port Serial Num:     " ${{ needs.setup.outputs.serials_hil }}
 
           for serial in ${{ needs.setup.outputs.serials_hil }}; do
-            line=$(./py_checkusb.py --serial $serial --batch)
-            if [[ $line =~ "$HEXNAME"]]; then
-              devicelist+=($(./py_checkusb.py --serial $serial --batch))
-            fi
+            echo "Serial: " $serial
+            devicelist+=($(./py_checkusb.py --serial $serial --batch))
+            for line in "${devicelist[@]}"; do
+              readarray -td, device <<<"$line"
+              echo "Device: " $device
+              if [[ $device[1] =~ "$HEXNAME" ]]; then
+                echo "Device list: " $device
+              fi
+            done
+
+
           done;
+          echo "Device list: " $devicelist
 
-          for line in "${devicelist[@]}";
-          do
-            readarray -td, device <<<"$line"
-            export SERIAL_NUM=${device[0]}
-            export HEXNAME=${device[1]}
-            export DEVICE=${device[2]}
-            export PORT=`./find_usb.sh $SERIAL_NUM`
 
-            echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-            echo "Real repo name:      " ${{ needs.setup.outputs.project }}
-            echo "Build HEX name:      " $HEXNAME
-            echo "Port Serial Num:     " $SERIAL_NUM
-            echo "Flash device:        " $DEVICE
-            echo "Port found:          " $PORT
-            echo "Board type name:     " $TYPE
 
-            cd $HOME
-            python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
-          done
+          # for line in "${devicelist[@]}";
+          # do
+          #   export SERIAL_NUM=${device[0]}
+          #   export HEXNAME=${device[1]}
+          #   export DEVICE=${device[2]}
+          #   export PORT=`./find_usb.sh $SERIAL_NUM`
+
+          #   echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
+          #   echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+          #   echo "Build HEX name:      " $HEXNAME
+          #   echo "Port Serial Num:     " $SERIAL_NUM
+          #   echo "Flash device:        " $DEVICE
+          #   echo "Port found:          " $PORT
+          #   echo "Board type name:     " $TYPE
+
+          #   cd $HOME
+          #   python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+
+          #   /opt/runner_support/py_console.py --port $PORT
+
+
+          # done
 
       - name: Monitor
         run: |
@@ -341,14 +354,10 @@ jobs:
           echo "Flash device:        " $DEVICE
           echo "Port found:          " $PORT
           echo "Board type name:     " $TYPE
-
-
-
           #export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
           #export SERIAL_NUM=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.port_name}}`
           #export DEVICE=`cat ./board2port.yaml | shyaml get-value $HEXNAME.${{ needs.setup.outputs.repo }}.${{ matrix.device}}`
           #export PORT=`./find_usb.sh $SERIAL_NUM`
-          #/opt/runner_support/py_console.py --port $PORT
 
       - name: HIL switch off
         run: |
