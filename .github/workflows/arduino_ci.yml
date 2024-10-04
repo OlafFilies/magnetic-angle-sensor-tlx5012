@@ -265,9 +265,9 @@ jobs:
         # board packages we want to run
         # attention the matrix spans over the fqbn not platform so that we can choose different boards
         # this example compiles each sample code for Arduino Uno, XMC2Go and XMC4700 boards
-        include:
-          - fqbn: ${{ fromJson(needs.setup.outputs.fqbn_hil) }}
-          - serials: ${{ fromJson(needs.setup.outputs.serials_hil) }}
+        fqbn: ${{ fromJson(needs.setup.outputs.fqbn_hil) }}
+
+        serials: ${{ fromJson(needs.setup.outputs.serials_hil) }}
 
     # These are the steps which should run for each combination of fqbn and example code
     steps:
@@ -281,15 +281,15 @@ jobs:
       - name: Compile Sketch
         run: |
           export TMPDIR=$HOME/tmp
-          # mkdir -p $TMPDIR
-          # ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
-          # mkdir -p "$HOME/Arduino/libraries"
-          # cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          # arduino-cli compile --clean --log --warnings all \
-          #                     --fqbn ${{ matrix.fqbn }} \
-          #                     --libraries="." \
-          #                     --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
-          #                     --export-binaries
+          mkdir -p $TMPDIR
+          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          arduino-cli compile --clean --log --warnings all \
+                              --fqbn ${{ matrix.fqbn }} \
+                              --libraries="." \
+                              --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
+                              --export-binaries
 
         # Flashes the compiled HEX file onto the selected MCU
         # REPO: the name of the repository which is also the link name
