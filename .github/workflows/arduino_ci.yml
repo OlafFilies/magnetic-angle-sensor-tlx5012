@@ -206,10 +206,10 @@ jobs:
       # setup links inside the self hosted runner for correct directory setup
       # REPO is the base name of the library which is linked to the right directory structure
       # check wether the .arduino15 packages dir is available
+      # export REPO=${{ needs.setup.outputs.repo }}
       # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
       - name: Set and check environment, install repos
         run: |
-          export REPO=${{ needs.setup.outputs.repo }}
           ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
           mkdir -p "$HOME/Arduino/libraries"
           cd $GITHUB_WORKSPACE/
@@ -227,9 +227,9 @@ jobs:
       - name: Run PlatformIO
         run: |
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          boards="${{ needs.setup.outputs.fqbn_example }}"
-          export board=`echo $boards | perl -pe 's/fqbn\=\w+:\w+:/board /gx'`
-          export board=`echo $board | perl -ne 'print lc'`
+          # boards="${{ needs.setup.outputs.fqbn_example }}"
+          # export board=`echo $boards | perl -pe 's/fqbn\=\w+:\w+:/board /gx'`
+          # export board=`echo $board | perl -ne 'print lc'`
           # pio ci --lib="." ${board} --project-option="lib_deps=Wire"
           pio ci --lib="." --board=uno --project-option="lib_deps=Wire"
         env:
@@ -326,6 +326,11 @@ jobs:
       - name: Monitor
         run: |
           cd /opt/runner_support/
+          echo "Build HEX name:      " $HEXNAME
+          echo "Port Serial Num:     " $SERIAL_NUM
+          echo "Flash device:        " $DEVICE
+          echo "Port found:          " $PORT
+          echo "Board type name:     " $TYPE
 
 
 
