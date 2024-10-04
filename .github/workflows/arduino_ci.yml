@@ -62,10 +62,12 @@ jobs:
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
-          eexmp=`cat ./fqbn.yml | shyaml get-value hil.example`
-          efqbn=`cat ./fqbn.yml | shyaml get-value hil.fqbn`
-          echo "matrix_hil=$eexmp" >> $GITHUB_OUTPUT
-          echo "fqbn_hil=$efqbn" >> $GITHUB_OUTPUT
+          ep=`cat ./fqbn.yml | shyaml get-value hil.example`
+          export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${ep}")
+          echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
+          fq=`cat ./fqbn.yml | shyaml get-value hil.fqbn`
+          export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${fq}")
+          echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
           cd /opt/runner_support/
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
@@ -257,7 +259,7 @@ jobs:
 
       # the code to flash
       matrix:
-      # the code to flash
+        # the code to flash
         example: ${{ fromJson(needs.setup.outputs.matrix_hil) }}
 
         # board packages we want to run
@@ -320,41 +322,6 @@ jobs:
             python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
           done 
 
-
-
-
-
-
-          # declare -a typelist
-          # declare -a seriallist
-          # export PATH=$PATH:/opt/runner_support/Unity
-
-
-          # for TYPE in "${typelist[@]}"; 
-          # do
-          #   declare -a serials
-          #   mapfile -t seriallist < <(python ./py_checkusb.py --type ${TYPE} --batch)
-          #   for line in "${seriallist[@]}";
-          #   do
-          #     readarray -td, serials <<<"$line"
-          #     export SERIAL_NUM=${serials[2]}
-          #     export HEXNAME=${serials[3]}
-          #     export DEVICE=${serials[4]}
-          #     export PORT=`./find_usb.sh $SERIAL_NUM`
-
-          #     echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-          #     echo "Real repo name:      " ${{ needs.setup.outputs.project }}
-          #     echo "Build HEX name:      " $HEXNAME
-          #     echo "Port Serial Num:     " $SERIAL_NUM
-          #     echo "Flash device:        " $DEVICE
-          #     echo "Port found:          " $PORT
-          #     echo "Board type name:     " $TYPE
-
-          #     cd $HOME
-          #     python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
-
-          #   done
-          # done
 
       - name: Monitor
         run: |

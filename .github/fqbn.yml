@@ -11,4 +11,4 @@ fqbn:
 
 hil:
   fqbn:         Infineon:xmc:XMC1100_XMC2GO
-  example:      examples/readAngleTest
+  example:      "examples/readAngleTest"
