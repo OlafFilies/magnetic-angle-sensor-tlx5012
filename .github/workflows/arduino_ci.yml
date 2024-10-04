@@ -306,17 +306,16 @@ jobs:
           echo "Build HEX name:      " $HEXNAME
           echo "Port Serial Num:     " ${{ needs.setup.outputs.serials_hil }}
 
-          for serial in ${{ needs.setup.outputs.serials_hil }};
-          do
-            devicelist+=($(./py_checkusb.py --serial $serial --batch))
+          for serial in ${{ needs.setup.outputs.serials_hil }}; do
+            line=$(./py_checkusb.py --serial $serial --batch)
+            if [[ $line =~ "$HEXNAME"]]; then
+              devicelist+=($(./py_checkusb.py --serial $serial --batch))
+            fi
           done;
 
           for line in "${devicelist[@]}";
           do
             readarray -td, device <<<"$line"
-            if [ "${device[1]} -ne  $HEXNAME  ]; then
-              break
-            fi
             export SERIAL_NUM=${device[0]}
             export HEXNAME=${device[1]}
             export DEVICE=${device[2]}
