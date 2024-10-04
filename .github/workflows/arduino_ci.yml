@@ -68,23 +68,22 @@ jobs:
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn=$mfqbn" >> $GITHUB_OUTPUT
 
-          echo $GITHUB_ACTION
+          echo $fqbn
 
           # Fetch the HIL information
           cd /opt/runner_support/
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
           declare -a typelist
           declare -a seriallist
-          
+
+          # Fetch the serial numbers for the HIL
           mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
           for TYPE in "${typelist[@]}"; 
           do
             declare -a serials
             readarray -td, serials <<<"$TYPE"
-            echo ${serials[2]}
             seriallist+=(${serials[2]})
           done;
-          echo seriallist="$seriallist"
           export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
           echo serials="$mser" >> $GITHUB_OUTPUT
 
@@ -111,6 +110,7 @@ jobs:
       serials: ${{ steps.set-matrix.outputs.serials }}
       repo: ${{ steps.set-matrix.outputs.repo }}
       project: ${{ steps.set-matrix.outputs.project }}
+      #device: ${{ steps.set-matrix.outputs.device }}
 
 
   #############################################################################
@@ -309,7 +309,30 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
-          echo ${{ matrix.fqbn }}
+          declare -a devicelist
+          mapfile -t devicelist < <(python ./py_checkusb.py --serial ${{ matrix.fqbn }} --batch)
+          for line in "${devicelist[@]}";
+          do
+            readarray -td, device <<<"$line"
+            export SERIAL_NUM=${{ matrix.fqbn }}
+            export HEXNAME=${device[1]}
+            export DEVICE=${device[2]}
+            export PORT=`./find_usb.sh $SERIAL_NUM`
+
+            echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
+            echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+            echo "Build HEX name:      " $HEXNAME
+            echo "Port Serial Num:     " $SERIAL_NUM
+            echo "Flash device:        " $DEVICE
+            echo "Port found:          " $PORT
+            echo "Board type name:     " $TYPE
+
+            cd $HOME
+            python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+          done 
+
+
+
 
 
 
@@ -317,7 +340,6 @@ jobs:
           # declare -a seriallist
           # export PATH=$PATH:/opt/runner_support/Unity
 
-          # mapfile -t typelist < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
 
           # for TYPE in "${typelist[@]}"; 
           # do
