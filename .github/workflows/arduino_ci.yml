@@ -90,7 +90,7 @@ jobs:
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
 
           declare -a typelist
-          mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --batch)
+          mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
           echo "${typelist[@]}"
 
 
