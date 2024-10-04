@@ -70,10 +70,10 @@ jobs:
           echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
           cd /opt/runner_support/
-          python py_checkusb.py --switch repo --namelist $REPO --onoff on
+          ./py_checkusb.py --switch repo --namelist $REPO --onoff on
           declare -a typelist
           declare -a seriallist
-          mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
+          mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
           for TYPE in "${typelist[@]}"; 
           do
             declare -a serials
@@ -301,6 +301,9 @@ jobs:
         run: |
           cd /opt/runner_support/
           declare -a devicelist
+
+          echo "fqbn: ${{ matrix.fqbn }}"
+
           mapfile -t devicelist < <(python ./py_checkusb.py --serial ${{ matrix.fqbn }} --batch)
           for line in "${devicelist[@]}";
           do
