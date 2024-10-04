@@ -301,12 +301,14 @@ jobs:
         run: |
           cd /opt/runner_support/
           declare -a devicelist
+          declare -a serials
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          serials=${{ fromJson(needs.setup.outputs.serials_hil) }}
 
           echo "Build HEX name:      " $HEXNAME
-          echo "Port Serial Num:     " ${{ needs.setup.outputs.serials_hil }}
+          echo "Port Serial Num:     " $serials
 
-          for serial in ${{ needs.setup.outputs.serials_hil }}; do
+          for serial in $serials; do
             echo "Serial: " $serial
             devicelist+=($(./py_checkusb.py --serial $serial --batch))
             for line in "${devicelist[@]}"; do
