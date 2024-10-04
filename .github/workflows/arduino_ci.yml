@@ -44,8 +44,6 @@ jobs:
       # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: set-matrix
         run: |
-          cd /opt/runner_support/
-
           # Fetch the repository name
           REPO="$(basename "$GITHUB_REPOSITORY")"
           echo "repo=$REPO" >> $GITHUB_OUTPUT
@@ -73,6 +71,7 @@ jobs:
           echo $GITHUB_ACTION
 
           # Fetch the HIL information
+          cd /opt/runner_support/
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
           declare -a typelist
           declare -a seriallist
