@@ -41,9 +41,15 @@ jobs:
           arduino-cli core install "arduino:avr"
           arduino-cli core install "infineon:xmc"
 
-      # Fetch variables and move them to the GITHUB_OUTPUT
+      # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: set-matrix
         run: |
+          cd /opt/runner_support/
+
+          # Fetch the repository name
+          REPO="$(basename "$GITHUB_REPOSITORY")"
+          echo "repo=$REPO" >> $GITHUB_OUTPUT
+
           # Fetch the project name from the xfp-dev arduino workspace-setup
           export $(xfp-dev arduino workspace-setup project-name)
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
@@ -59,12 +65,24 @@ jobs:
           echo matrix="$mvar" >> $GITHUB_OUTPUT
 
 
-
+          # Fetch the fqbn from the fqbn.yml
           cd $GITHUB_WORKSPACE/.github
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn=$mfqbn" >> $GITHUB_OUTPUT
 
           echo $GITHUB_ACTION
+
+          # Fetch the HIL information
+          python py_checkusb.py --switch repo --namelist $REPO --onoff on
+          declare -a typelist
+          declare -a seriallist
+          mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
+          for TYPE in "${typelist[@]}"; 
+          do
+            seriallist+=TYPE[2]
+          done;
+          export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
+          echo serials="$mser" >> $GITHUB_OUTPUT
 
       # # Cache python pip downloads if we have one for faster access
       # - name: Cache pip
@@ -81,24 +99,12 @@ jobs:
       #     path: ~/.platformio
       #     key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       
-      # Switch on HIL devices
-      - name: HIL switch on
-        run: |
-          cd /opt/runner_support/
-          REPO="$(basename "$GITHUB_REPOSITORY")"
-          echo "repo=$REPO" >> $GITHUB_OUTPUT
-          python py_checkusb.py --switch repo --namelist $REPO --onoff on
-
-          declare -a typelist
-          mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
-          echo "${typelist[@]}"
-
 
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       fqbn: ${{ steps.set-matrix.outputs.fqbn }}
-
+      serials: ${{ steps.set-matrix.outputs.serials }}
       repo: ${{ steps.set-matrix.outputs.repo }}
       project: ${{ steps.set-matrix.outputs.project }}
 
@@ -257,9 +263,7 @@ jobs:
         # board packages we want to run
         # attention the matrix spans over the fqbn not platform so that we can choose different boards
         # this example compiles each sample code for Arduino Uno, XMC2Go and XMC4700 boards
-        fqbn: [
-          "Infineon:xmc:XMC1100_XMC2GO"
-        ]
+        fqbn: ${{ fromJson(needs.setup.outputs.serials) }}
 
         # include additional information for each fqbn, in this case the platform name to install
         # port_name: the name of the yaml structure in the board2port.yaml, there can be more than one hardware attached
@@ -280,16 +284,16 @@ jobs:
       # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
       - name: Compile Sketch
         run: |
-          export TMPDIR=$HOME/tmp
-          mkdir -p $TMPDIR
-          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
-          mkdir -p "$HOME/Arduino/libraries"
-          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          arduino-cli compile --clean --log --warnings all \
-                              --fqbn ${{ matrix.fqbn }} \
-                              --libraries="." \
-                              --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
-                              --export-binaries
+          # export TMPDIR=$HOME/tmp
+          # mkdir -p $TMPDIR
+          # ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          # mkdir -p "$HOME/Arduino/libraries"
+          # cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          # arduino-cli compile --clean --log --warnings all \
+          #                     --fqbn ${{ matrix.fqbn }} \
+          #                     --libraries="." \
+          #                     --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
+          #                     --export-binaries
 
         # Flashes the compiled HEX file onto the selected MCU
         # REPO: the name of the repository which is also the link name
@@ -301,37 +305,41 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
-          declare -a typelist
-          declare -a seriallist
-          export PATH=$PATH:/opt/runner_support/Unity
+          echo ${{ matrix.fqbn }}
 
-          mapfile -t typelist < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
 
-          for TYPE in "${typelist[@]}"; 
-          do
-            declare -a serials
-            mapfile -t seriallist < <(python ./py_checkusb.py --type ${TYPE} --batch)
-            for line in "${seriallist[@]}";
-            do
-              readarray -td, serials <<<"$line"
-              export SERIAL_NUM=${serials[2]}
-              export HEXNAME=${serials[3]}
-              export DEVICE=${serials[4]}
-              export PORT=`./find_usb.sh $SERIAL_NUM`
 
-              echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-              echo "Real repo name:      " ${{ needs.setup.outputs.project }}
-              echo "Build HEX name:      " $HEXNAME
-              echo "Port Serial Num:     " $SERIAL_NUM
-              echo "Flash device:        " $DEVICE
-              echo "Port found:          " $PORT
-              echo "Board type name:     " $TYPE
+          # declare -a typelist
+          # declare -a seriallist
+          # export PATH=$PATH:/opt/runner_support/Unity
 
-              cd $HOME
-              python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+          # mapfile -t typelist < <(python ./py_checkusb.py --repo ${{ needs.setup.outputs.repo }} --batch)
 
-            done
-          done
+          # for TYPE in "${typelist[@]}"; 
+          # do
+          #   declare -a serials
+          #   mapfile -t seriallist < <(python ./py_checkusb.py --type ${TYPE} --batch)
+          #   for line in "${seriallist[@]}";
+          #   do
+          #     readarray -td, serials <<<"$line"
+          #     export SERIAL_NUM=${serials[2]}
+          #     export HEXNAME=${serials[3]}
+          #     export DEVICE=${serials[4]}
+          #     export PORT=`./find_usb.sh $SERIAL_NUM`
+
+          #     echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
+          #     echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+          #     echo "Build HEX name:      " $HEXNAME
+          #     echo "Port Serial Num:     " $SERIAL_NUM
+          #     echo "Flash device:        " $DEVICE
+          #     echo "Port found:          " $PORT
+          #     echo "Board type name:     " $TYPE
+
+          #     cd $HOME
+          #     python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+
+          #   done
+          # done
 
       - name: Monitor
         run: |
