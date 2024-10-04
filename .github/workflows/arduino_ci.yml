@@ -60,27 +60,26 @@ jobs:
 
 
 
-
           cd $GITHUB_WORKSPACE/.github
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn=$mfqbn" >> $GITHUB_OUTPUT
 
           echo $GITHUB_ACTION
 
-      # Cache python pip downloads if we have one for faster access
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
+      # # Cache python pip downloads if we have one for faster access
+      # - name: Cache pip
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.cache/pip
+      #     key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+      #     restore-keys: ${{ runner.os }}-pip-
  
-      # Ditto, cache PlatformIO downloads for faster acces during compilation
-      - name: Cache PlatformIO
-        uses: actions/cache@v4
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      # # Ditto, cache PlatformIO downloads for faster acces during compilation
+      # - name: Cache PlatformIO
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.platformio
+      #     key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       
       # Switch on HIL devices
       - name: HIL switch on
@@ -350,4 +349,4 @@ jobs:
         run: |
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
-          python py_checkusb.py --switch repo --namelist REPO --onoff off
+          python py_checkusb.py --switch repo --namelist ${REPO} --onoff off
