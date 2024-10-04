@@ -341,7 +341,7 @@ jobs:
               export DEVICE=${device[2]}
               export TYPE=${device[6]}
               export PORT=`./find_usb.sh $SERIAL_NUM`
-              ./py_console.py --port $PORT
+              # ./py_console.py --port $PORT
             fi
           done
 
