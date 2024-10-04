@@ -70,13 +70,15 @@ jobs:
           echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
           # Fetch the HIL information
-          cd /opt/runner_support/
-
           efqbn=$(cat ./fqbn.yml | shyaml get-value hil.fqbn')
           eexmp=$(cat ./fqbn.yml | shyaml get-value hil.example')
+          echo "matrix_hil=$eexmp" >> $GITHUB_OUTPUT
+          echo "fqbn_hil=$efqbn" >> $GITHUB_OUTPUT
+
           echo "fqbn_hil=$efqbn"
           echo "matrix_hil=$eexmp"
 
+          cd /opt/runner_support/
           python py_checkusb.py --switch repo --namelist $REPO --onoff on
           declare -a typelist
           declare -a seriallist
@@ -90,7 +92,7 @@ jobs:
             seriallist+=(${serials[2]})
           done;
           export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
-          echo serials="$mser" >> $GITHUB_OUTPUT
+          echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
       # # Cache python pip downloads if we have one for faster access
       # - name: Cache pip
@@ -112,11 +114,6 @@ jobs:
     outputs:
       repo: ${{ steps.set-matrix.outputs.repo }}
       project: ${{ steps.set-matrix.outputs.project }}
-
-
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      fqbn: ${{ steps.set-matrix.outputs.fqbn }}
-      serials: ${{ steps.set-matrix.outputs.serials }}
 
       matrix_example: ${{ steps.set-matrix.outputs.matrix_example }}
       fqbn_example: ${{ steps.set-matrix.outputs.fqbn_example }}
@@ -147,7 +144,7 @@ jobs:
 
       matrix:
         # List of all examples in the lib to compile
-        example: ${{ fromJson(needs.setup.outputs.matrix) }}
+        example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
 
     # These are the steps which should run for each combination of fqbn and example code
     steps:
@@ -179,7 +176,7 @@ jobs:
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          arduino-cli compile ${{ needs.setup.outputs.fqbn }} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
+          arduino-cli compile ${{ needs.setup.outputs.fqbn_example }} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
@@ -204,7 +201,7 @@ jobs:
 
       matrix:
         # List of all examples in the lib to compile
-        example: ${{ fromJson(needs.setup.outputs.matrix) }}
+        example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
 
     steps:
       # checkout the latest github action code
@@ -240,7 +237,7 @@ jobs:
       - name: Run PlatformIO
         run: |
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          boards="${{ needs.setup.outputs.fqbn }}"
+          boards="${{ needs.setup.outputs.fqbn_example }}"
           export board=`echo $boards | perl -pe 's/fqbn\=\w+:\w+:/board /gx'`
           export board=`echo $board | perl -ne 'print lc'`
           # pio ci --lib="." ${board} --project-option="lib_deps=Wire"
@@ -273,14 +270,12 @@ jobs:
       # the code to flash
       matrix:
       # the code to flash
-        example: [
-          examples/readAngleTest
-        ]
+        example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
 
         # board packages we want to run
         # attention the matrix spans over the fqbn not platform so that we can choose different boards
         # this example compiles each sample code for Arduino Uno, XMC2Go and XMC4700 boards
-        fqbn: ${{ fromJson(needs.setup.outputs.serials) }}
+        fqbn: ${{ fromJson(needs.setup.outputs.fqbn_hil) }}
 
         # include additional information for each fqbn, in this case the platform name to install
         # port_name: the name of the yaml structure in the board2port.yaml, there can be more than one hardware attached
@@ -301,16 +296,16 @@ jobs:
       # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
       - name: Compile Sketch
         run: |
-          # export TMPDIR=$HOME/tmp
-          # mkdir -p $TMPDIR
-          # ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
-          # mkdir -p "$HOME/Arduino/libraries"
-          # cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          # arduino-cli compile --clean --log --warnings all \
-          #                     --fqbn ${{ matrix.fqbn }} \
-          #                     --libraries="." \
-          #                     --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
-          #                     --export-binaries
+          export TMPDIR=$HOME/tmp
+          mkdir -p $TMPDIR
+          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          arduino-cli compile --clean --log --warnings all \
+                              --fqbn ${{ matrix.fqbn }} \
+                              --libraries="." \
+                              --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
+                              --export-binaries
 
         # Flashes the compiled HEX file onto the selected MCU
         # REPO: the name of the repository which is also the link name
