@@ -301,12 +301,13 @@ jobs:
         # use the python based XMC flasher
       - name: Flash
         run: |
+          cd /opt/runner_support/
           echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
           echo "Real repo name:      " ${{ needs.setup.outputs.project }}
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
 
           declare -a devicelist
-          devicelist+=($(/opt/runner_support/py_checkusb.py --serial ${{ matrix.serials }} --batch))
+          devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
           for line in "${devicelist[@]}"; do
             if [[ $line =~ $device[1] ]]; then
               readarray -td, device <<<"$line"
