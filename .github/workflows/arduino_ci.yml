@@ -78,7 +78,7 @@ jobs:
           mapfile -t typelist < <(python ./py_checkusb.py --repo ${REPO} --full --batch)
           for TYPE in "${typelist[@]}"; 
           do
-            seriallist+=TYPE[2]
+            seriallist+=${TYPE[2]}
           done;
           export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
           echo serials="$mser" >> $GITHUB_OUTPUT
