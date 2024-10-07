@@ -59,16 +59,17 @@ jobs:
           echo matrix_example="$mvar" >> $GITHUB_OUTPUT
 
           cd $GITHUB_WORKSPACE/.github
+
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
-          ep=`cat ./fqbn.yml | shyaml get-value hil.example`
-          export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${ep}")
-          echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
-          export bad=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.baud`")
+          export bad=`cat ./fqbn.yml | shyaml get-value hil.baud`
           echo "baud_hil=$bad" >> $GITHUB_OUTPUT
-          fq=`cat ./fqbn.yml | shyaml get-value hil.fqbn`
-          export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${fq}")
+
+          export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.example`")
+          echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
+
+          export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "cat ./fqbn.yml | shyaml get-value hil.fqbn")
           echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
           cd /opt/runner_support/
