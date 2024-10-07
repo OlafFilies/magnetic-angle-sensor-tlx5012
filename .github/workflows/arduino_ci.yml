@@ -65,6 +65,8 @@ jobs:
           ep=`cat ./fqbn.yml | shyaml get-value hil.example`
           export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${ep}")
           echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
+          export bad=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.baud`")
+          echo "baud_hil=$bad" >> $GITHUB_OUTPUT
           fq=`cat ./fqbn.yml | shyaml get-value hil.fqbn`
           export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${fq}")
           echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
@@ -108,6 +110,7 @@ jobs:
       fqbn_example: ${{ steps.set-matrix.outputs.fqbn_example }}
       
       matrix_hil: ${{ steps.set-matrix.outputs.matrix_hil }}
+      baud_hil: ${{ steps.set-matrix.outputs.baud_hil }}
       fqbn_hil: ${{ steps.set-matrix.outputs.fqbn_hil }}
       serials_hil: ${{ steps.set-matrix.outputs.serials_hil }}
 
@@ -341,7 +344,7 @@ jobs:
               export DEVICE=${device[2]}
               export TYPE=${device[6]}
               export PORT=`./find_usb.sh $SERIAL_NUM`
-              # ./py_console.py --port $PORT
+              ./py_console.py --port $PORT --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
             fi
           done
 
