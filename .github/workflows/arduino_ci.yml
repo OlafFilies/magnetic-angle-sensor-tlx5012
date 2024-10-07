@@ -69,7 +69,7 @@ jobs:
           export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.example`")
           echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
 
-          export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "cat ./fqbn.yml | shyaml get-value hil.fqbn")
+          export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
           echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
           cd /opt/runner_support/
