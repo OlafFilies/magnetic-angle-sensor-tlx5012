@@ -72,8 +72,8 @@ jobs:
           # export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
           # echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
-          # cd /opt/runner_support/
-          # REPO="$(basename "$GITHUB_REPOSITORY")"
+          cd /opt/runner_support/
+          REPO="$(basename "$GITHUB_REPOSITORY")"
           # ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
