@@ -44,10 +44,7 @@ jobs:
       # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: set-matrix
         run: |
-          REPO="$(basename "$GITHUB_REPOSITORY")"
-          echo "repo=$REPO" >> $GITHUB_OUTPUT
           export $(xfp-dev arduino workspace-setup project-name)
-          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           cd $GITHUB_WORKSPACE/src/framework/arduino
           declare -a data
@@ -56,10 +53,10 @@ jobs:
             data+=($x);
           done;
           export mvar=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
+          echo "matrix_example=$mvar"
           echo matrix_example="$mvar" >> $GITHUB_OUTPUT
 
           cd $GITHUB_WORKSPACE/.github
-
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
@@ -73,7 +70,10 @@ jobs:
           echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
           cd /opt/runner_support/
+          REPO="$(basename "$GITHUB_REPOSITORY")"
           ./py_checkusb.py --switch repo --namelist $REPO --onoff on
+
+
           declare -a typelist
           declare -a seriallist
           mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
@@ -84,7 +84,12 @@ jobs:
             seriallist+=(${serials[2]})
           done;
           export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
+          echo "serials_hil=$mser"
           echo serials_hil="$mser" >> $GITHUB_OUTPUT
+
+
+          echo "repo=$REPO" >> $GITHUB_OUTPUT
+          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
       # # Cache python pip downloads if we have one for faster access
       # - name: Cache pip
@@ -306,12 +311,12 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
-          echo "Repo name extracted: " ${{ needs.setup.outputs.repo }}
-          echo "Real repo name:      " ${{ needs.setup.outputs.project }}
+          export PROJECT=${{ needs.setup.outputs.project }}
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
 
           declare -a devicelist
           devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
+          export DEVICELIST=${devicelist[@]}
           for line in "${devicelist[@]}"; do
             if [[ $line =~ $device[1] ]]; then
               readarray -td, device <<<"$line"
@@ -327,7 +332,7 @@ jobs:
               echo "Board type name:     " $TYPE
 
               cd $HOME
-              python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}/${{ matrix.example }}/build/$HEXNAME/*.hex
+              python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
 
             fi
           done
@@ -335,7 +340,7 @@ jobs:
       - name: Monitor
         run: |
           cd /opt/runner_support/
-          export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          echo "${{ env.DEVICELIST}}"
           declare -a devicelist
           devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
           for line in "${devicelist[@]}"; do
@@ -354,3 +359,10 @@ jobs:
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
           python py_checkusb.py --switch repo --namelist ${REPO} --onoff off
+
+      # - name: Upload binaries 
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ env.sensor }}
+      #     path: ~/Arduino/libraries/${{ env.repo }}/build/build/${{ env.hexname }}/*
+      #     if-no-files-found: ignore
