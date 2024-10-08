@@ -60,8 +60,8 @@ jobs:
           cd $GITHUB_WORKSPACE/.github
           mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
           echo "fqbn_example=$mfqbn"
-          
-           # echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
+
+          # echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
           # export bad=`cat ./fqbn.yml | shyaml get-value hil.baud`
           # echo "baud_hil=$bad" >> $GITHUB_OUTPUT
@@ -77,18 +77,18 @@ jobs:
           # ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
-          # declare -a typelist
-          # declare -a seriallist
-          # mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
-          # for TYPE in "${typelist[@]}"; 
-          # do
-          #   declare -a serials
-          #   readarray -td, serials <<<"$TYPE"
-          #   seriallist+=(${serials[2]})
-          # done;
-          # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
-          # echo "serials_hil=$mser"
-          # echo serials_hil="$mser" >> $GITHUB_OUTPUT
+          declare -a typelist
+          declare -a seriallist
+          mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
+          for TYPE in "${typelist[@]}"; 
+          do
+            declare -a serials
+            readarray -td, serials <<<"$TYPE"
+            seriallist+=(${serials[2]})
+          done;
+          export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
+          echo "serials_hil=$mser"
+          echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
 
           # echo "repo=$REPO" >> $GITHUB_OUTPUT
