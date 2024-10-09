@@ -44,22 +44,22 @@ jobs:
       # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: set-matrix
         run: |
-          export $(xfp-dev arduino workspace-setup project-name)
+          # export $(xfp-dev arduino workspace-setup project-name)
 
-          cd $GITHUB_WORKSPACE/src/framework/arduino
-          declare -a data
-          for x in examples/*;
-          do 
-            data+=($x);
-          done;
-          export mvar=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
-          echo "matrix_example=$mvar"
+          # cd $GITHUB_WORKSPACE/src/framework/arduino
+          # declare -a data
+          # for x in examples/*;
+          # do 
+          #   data+=($x);
+          # done;
+          # export mvar=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
+          # echo "matrix_example=$mvar"
 
           # echo matrix_example="$mvar" >> $GITHUB_OUTPUT
 
-          cd $GITHUB_WORKSPACE/.github
-          mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
-          echo "fqbn_example=$mfqbn"
+          # cd $GITHUB_WORKSPACE/.github
+          # mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
+          # echo "fqbn_example=$mfqbn"
 
           # echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
@@ -92,8 +92,8 @@ jobs:
           # done;
           # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
 
-          mser=`./py_checkusb.py --repo ${REPO} --list serial --json` | jq $REPO
-          echo "serials_hil="$mser
+          mser=`./py_checkusb.py --repo ${REPO} --list serial --json`
+          echo "serials_hil="$mser | jq ".${REPO}"
           echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
 
