@@ -72,44 +72,16 @@ jobs:
           # export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
           # echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
+          # switch on USB ports and save serial ids for GH actions
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
           echo "repo=$REPO" >> $GITHUB_OUTPUT
-
+          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
+          serials_hil=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"")
+          echo "serials_hil=$serials_hil" >> $GITHUB_OUTPUT
           # ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
-          declare -a typelist
-          declare -a seriallist
-          
-          
-          
-          # mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
-          # for TYPE in "${typelist[@]}"; 
-          # do
-          #   declare -a serials
-          #   readarray -td, serials <<<"$TYPE"
-          #   seriallist+=(${serials[2]})
-          # done;
-          # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
-
-          echo "$REPO"
-          export mser=$(./py_checkusb.py --repo ${REPO} --list serial --json)
-          test=$(echo $mser | jq ".\"${REPO}\"")
-          question=$(echo $mser | jq '."xensiv-angle-sensor-tlx5012"')
-          
-          echo ".\"${REPO}\""
-          echo "mser=$mser"
-          echo "test=$test"
-          echo "question=$question"
-
-          serials_hil=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"")
-          echo "serials_hil=$serials_hil"
-          #echo serials_hil="$mser" >> $GITHUB_OUTPUT
-
-
-          # echo "repo=$REPO" >> $GITHUB_OUTPUT
-          # echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
       # # Cache python pip downloads if we have one for faster access
       # - name: Cache pip
@@ -333,8 +305,8 @@ jobs:
         run: |
           cd /opt/runner_support/
           echo "Serials: ${{ matrix.serials }}"
-  #         export PROJECT=${{ needs.setup.outputs.project }}
-  #         export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          export PROJECT=${{ needs.setup.outputs.project }}
+          export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
 
   #         declare -a devicelist
   #         devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
