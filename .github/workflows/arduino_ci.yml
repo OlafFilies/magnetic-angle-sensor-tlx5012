@@ -313,7 +313,7 @@ jobs:
           export PORT=`./find_usb.sh $SERIAL_NUM`
 
           devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
-          export DEVICE=$(echo $devicelist | jq ".[0]")
+          export DEVICE=$(echo $devicelist | jq -r ".[0]")
 
           echo "Repository:          " $REPO
           echo "Port Serial Num:     " $SERIAL_NUM
