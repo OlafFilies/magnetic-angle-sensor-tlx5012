@@ -330,7 +330,7 @@ jobs:
   #             echo "Board type name:     " $TYPE
 
   #             cd $HOME
-              python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
+              #python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
 
   #           fi
   #         done
