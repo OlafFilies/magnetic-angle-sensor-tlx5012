@@ -308,11 +308,18 @@ jobs:
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
           export SERIAL_NUM=${{ matrix.serials }}
 
-
-          echo "Serials: ${{ matrix.serials }}"
           echo "Port Serial Num:     " $SERIAL_NUM
           echo "Build HEX name:      " $HEXNAME
   
+
+          REPO="$(basename "$GITHUB_REPOSITORY")"
+          echo "repo=$REPO" >> $GITHUB_OUTPUT
+          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
+
+          device_type=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
+          echo "device_type=$device_type"
+          
+
 
   #         declare -a devicelist
   #         devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
