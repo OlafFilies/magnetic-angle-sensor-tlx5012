@@ -92,8 +92,9 @@ jobs:
           #   seriallist+=(${serials[2]})
           # done;
           # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
-          export mser=$(`./py_checkusb.py --repo ${REPO} --list serial --json` | jq '."${REPO}"')
-          
+
+          echo "$REPO"
+          export mser=$(./py_checkusb.py --repo ${REPO} --list serial --json | jq '."${REPO}"')
           echo "$mser"
           echo "serials_hil="$(`./py_checkusb.py --repo ${REPO} --list serial --json` | jq '."${REPO}"')
 
