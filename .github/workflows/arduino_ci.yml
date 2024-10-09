@@ -274,6 +274,7 @@ jobs:
           echo "serial=$SERIAL_NUM" >> $GITHUB_ENV
           echo "port=$PORT" >> $GITHUB_ENV
           echo "device=$DEVICE" >> $GITHUB_ENV
+          echo "${{ env.device }}"
 
           devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
           export DEVICE=$(echo $devicelist | jq -r ".[0]")
