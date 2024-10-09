@@ -74,6 +74,7 @@ jobs:
 
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
+
           # ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
@@ -91,8 +92,8 @@ jobs:
           # done;
           # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
 
-          mser=$(./py_checkusb.py --repo ${REPO} --list serial --json)
-          echo "serials_hil=$mser"
+          mser=`./py_checkusb.py --repo ${REPO} --list serial --json` | jq $REPO
+          echo "serials_hil="$mser
           echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
 
