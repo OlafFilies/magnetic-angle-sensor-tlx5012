@@ -306,11 +306,18 @@ jobs:
           cd /opt/runner_support/
           declare -a devicelist
  
-          export REPO="$(basename "$GITHUB_REPOSITORY")"
-          export PROJECT=${{ needs.setup.outputs.project }}
-          export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
-          export SERIAL_NUM=${{ matrix.serials }}
-          export PORT=`./find_usb.sh $SERIAL_NUM`
+          REPO="$(basename "$GITHUB_REPOSITORY")"
+          PROJECT=${{ needs.setup.outputs.project }}
+          HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          SERIAL_NUM=${{ matrix.serials }}
+          PORT=`./find_usb.sh $SERIAL_NUM`
+
+          echo "repo=$REPO" >> $GITHUB_ENV
+          echo "project=$PROJECT" >> $GITHUB_ENV
+          echo "hexname=$HEXNAME" >> $GITHUB_ENV
+          echo "serial=$SERIAL_NUM" >> $GITHUB_ENV
+          echo "port=$PORT" >> $GITHUB_ENV
+          echo "device=$DEVICE" >> $GITHUB_ENV
 
           devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
           export DEVICE=$(echo $devicelist | jq -r ".[0]")
@@ -327,7 +334,7 @@ jobs:
       - name: Monitor
         run: |
           cd /opt/runner_support/
-          ./py_console.py --port ${{ env.PORT }} --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
+          #./py_console.py --port ${{ env.PORT }} --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
 
       - name: HIL switch off
         run: |
