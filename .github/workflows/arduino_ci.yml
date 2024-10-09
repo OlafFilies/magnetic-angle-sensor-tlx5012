@@ -313,7 +313,12 @@ jobs:
       - name: Flash
         run: |
           cd $HOME
-          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.device }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ matrix.example }}/build/${{ env.hexname }}/*.hex
+          echo "${{ env.device }}"
+          echo "${{ env.port }}"
+          echo "${{ env.project }}"
+          echo "${{ env.hexname }}"
+
+          #python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.device }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ matrix.example }}/build/${{ env.hexname }}/*.hex
 
       - name: Monitor
         run: |
