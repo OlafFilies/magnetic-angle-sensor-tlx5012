@@ -76,7 +76,7 @@ jobs:
           REPO="$(basename "$GITHUB_REPOSITORY")"
           echo "repo=$REPO" >> $GITHUB_OUTPUT
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
-          serials_hil=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq --compact-output --null-input ".\"${REPO}\"")
+          serials_hil=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
           echo "serials_hil=$serials_hil"
           echo "serials_hil=$serials_hil" >> $GITHUB_OUTPUT
           # ./py_checkusb.py --switch repo --namelist $REPO --onoff on
