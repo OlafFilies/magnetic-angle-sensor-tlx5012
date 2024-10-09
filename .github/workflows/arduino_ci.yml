@@ -81,24 +81,6 @@ jobs:
           echo "serials_hil=$serials_hil" >> $GITHUB_OUTPUT
           ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
-
-
-      # # Cache python pip downloads if we have one for faster access
-      # - name: Cache pip
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.cache/pip
-      #     key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-      #     restore-keys: ${{ runner.os }}-pip-
- 
-      # # Ditto, cache PlatformIO downloads for faster acces during compilation
-      # - name: Cache PlatformIO
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.platformio
-      #     key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-      
-
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
     outputs:
       repo: ${{ steps.set-matrix.outputs.repo }}
@@ -275,33 +257,7 @@ jobs:
     # These are the steps which should run for each combination of fqbn and example code
     steps:
 
-      # Compile the code which we want to flash
-      # REPO: the name of the repository which is also the link name
-      # check/set the arduino15 package library
-      # link the repo to the correct place for compiling under arduino-cli
-      # compile the code with the arduino-cli and export the binary files for flashing
-      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
-      - name: Compile Sketch
-        run: |
-          export TMPDIR=$HOME/tmp
-          mkdir -p $TMPDIR
-          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
-          mkdir -p "$HOME/Arduino/libraries"
-          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          arduino-cli compile --clean --log --warnings all \
-                              --fqbn ${{ matrix.fqbn }} \
-                              --libraries="." \
-                              --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
-                              --export-binaries
-
-        # Flashes the compiled HEX file onto the selected MCU
-        # REPO: the name of the repository which is also the link name
-        # HEXNAME: the board depended name of the HEX files
-        # SERIAL_NUM: the unique serial number of the hardware board according the board2port.yaml
-        # DEVICE: the flashing device according the board2port.yaml
-        # PORT: real PORT name of the attached hardware based on the SERIAL_NUM
-        # use the python based XMC flasher
-      - name: Flash
+      - name: Environment
         run: |
           cd /opt/runner_support/
           declare -a devicelist
@@ -328,8 +284,36 @@ jobs:
           echo "Port found:          " $PORT
           echo "Device Type:         " $DEVICE
 
+      # Compile the code which we want to flash
+      # REPO: the name of the repository which is also the link name
+      # check/set the arduino15 package library
+      # link the repo to the correct place for compiling under arduino-cli
+      # compile the code with the arduino-cli and export the binary files for flashing
+      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
+      - name: Compile Sketch
+        run: |
+          export TMPDIR=$HOME/tmp
+          mkdir -p $TMPDIR
+          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $HOME/Arduino/libraries/${{ env.project }}
+          arduino-cli compile --clean --log --warnings all \
+                              --fqbn ${{ matrix.fqbn }} \
+                              --libraries="." \
+                              --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
+                              --export-binaries
+
+        # Flashes the compiled HEX file onto the selected MCU
+        # REPO: the name of the repository which is also the link name
+        # HEXNAME: the board depended name of the HEX files
+        # SERIAL_NUM: the unique serial number of the hardware board according the board2port.yaml
+        # DEVICE: the flashing device according the board2port.yaml
+        # PORT: real PORT name of the attached hardware based on the SERIAL_NUM
+        # use the python based XMC flasher
+      - name: Flash
+        run: |
           cd $HOME
-          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
+          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.device }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ matrix.example }}/build/${{ env.hexname }}/*.hex
 
       - name: Monitor
         run: |
