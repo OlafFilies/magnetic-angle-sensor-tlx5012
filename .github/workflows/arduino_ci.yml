@@ -304,9 +304,15 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
-          echo "Serials: ${{ matrix.serials }}"
           export PROJECT=${{ needs.setup.outputs.project }}
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
+          export SERIAL_NUM=${{ matrix.serials }}
+
+
+          echo "Serials: ${{ matrix.serials }}"
+          echo "Port Serial Num:     " $SERIAL_NUM
+          echo "Build HEX name:      " $HEXNAME
+  
 
   #         declare -a devicelist
   #         devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
@@ -314,19 +320,17 @@ jobs:
   #         for line in "${devicelist[@]}"; do
   #           if [[ $line =~ $device[1] ]]; then
   #             readarray -td, device <<<"$line"
-  #             export SERIAL_NUM=${device[0]}
+
   #             export DEVICE=${device[2]}
   #             export TYPE=${device[6]}
   #             export PORT=`./find_usb.sh $SERIAL_NUM`
 
-  #             echo "Build HEX name:      " $HEXNAME
-  #             echo "Port Serial Num:     " $SERIAL_NUM
   #             echo "Flash device:        " $DEVICE
   #             echo "Port found:          " $PORT
   #             echo "Board type name:     " $TYPE
 
   #             cd $HOME
-  #             python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
+              python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
 
   #           fi
   #         done
