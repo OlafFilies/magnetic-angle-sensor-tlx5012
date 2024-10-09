@@ -94,9 +94,8 @@ jobs:
           # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
 
           echo "$REPO"
-          export mser=$(./py_checkusb.py --repo ${REPO} --list serial --json)
+          export mser=$(./py_checkusb.py --repo ${REPO} --list serial --json | jq '"\"${REPO}\""')
           echo "$mser"
-          echo $mser | jq '"${REPO}"'
           question=$(echo $mser | jq '."xensiv-angle-sensor-tlx5012"')
           echo $question
 
