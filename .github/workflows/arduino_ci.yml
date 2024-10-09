@@ -95,14 +95,14 @@ jobs:
 
           echo "$REPO"
           export mser=$(./py_checkusb.py --repo ${REPO} --list serial --json)
-          echo "$mser"
           test=$(echo $mser | jq '."\"${REPO}\""')
-          echo $test
           question=$(echo $mser | jq '."xensiv-angle-sensor-tlx5012"')
-          echo $question
+          
+          echo "mser=$mser"
+          echo "test=$test"
+          echo "question=$question"
 
-          echo "serials_hil="$(`./py_checkusb.py --repo ${REPO} --list serial --json` | jq '."${REPO}"')
-
+          #echo "serials_hil="$(`./py_checkusb.py --repo ${REPO} --list serial --json` | jq '."${REPO}"')
           #echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
 
