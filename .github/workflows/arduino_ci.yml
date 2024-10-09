@@ -321,9 +321,10 @@ jobs:
 
 
           device= $(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
-          
-          echo "device_type=$device | jq ".[0]"
+          test=$(echo $device | jq ".[0]")
 
+          echo "device_type=$device"
+          echo "test=$test"
 
   #             cd $HOME
               #python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
