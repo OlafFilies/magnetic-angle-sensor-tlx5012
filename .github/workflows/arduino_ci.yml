@@ -304,24 +304,31 @@ jobs:
       - name: Flash
         run: |
           cd /opt/runner_support/
+          declare -a devicelist
+          export REPO="$(basename "$GITHUB_REPOSITORY")"
           export PROJECT=${{ needs.setup.outputs.project }}
           export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
           export SERIAL_NUM=${{ matrix.serials }}
+          export PORT=`./find_usb.sh $SERIAL_NUM`
 
-          echo "Port Serial Num:     " $SERIAL_NUM
-          echo "Build HEX name:      " $HEXNAME
-  
-
-          REPO="$(basename "$GITHUB_REPOSITORY")"
-          echo "repo=$REPO" >> $GITHUB_OUTPUT
-          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
-
-          device_type=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
-          echo "device_type=$device_type"
-          
+ 
+          device=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".[0].\"${SERIAL_NUM}\"" --compact-output )
 
 
-  #         declare -a devicelist
+          # for device in "${devicelist[@]}"; do
+          #     export TYPE=${device[6]}
+          #     echo "Flash device:        " $DEVICE
+          #     echo "Port found:          " $PORT
+          #     echo "Board type name:     " $TYPE
+
+          # export DEVICE=${device[2]}
+          #     #python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
+          #   fi
+          # done
+          # echo "device_type=$devicelist"
+
+
+
   #         devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
   #         export DEVICELIST=${devicelist[@]}
   #         for line in "${devicelist[@]}"; do
