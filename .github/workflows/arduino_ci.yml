@@ -79,7 +79,7 @@ jobs:
           serials_hil=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
           echo "serials_hil=$serials_hil"
           echo "serials_hil=$serials_hil" >> $GITHUB_OUTPUT
-          # ./py_checkusb.py --switch repo --namelist $REPO --onoff on
+          ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
 
@@ -275,32 +275,32 @@ jobs:
     # These are the steps which should run for each combination of fqbn and example code
     steps:
 
-  #     # Compile the code which we want to flash
-  #     # REPO: the name of the repository which is also the link name
-  #     # check/set the arduino15 package library
-  #     # link the repo to the correct place for compiling under arduino-cli
-  #     # compile the code with the arduino-cli and export the binary files for flashing
-  #     # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
-  #     - name: Compile Sketch
-  #       run: |
-  #         export TMPDIR=$HOME/tmp
-  #         mkdir -p $TMPDIR
-  #         ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
-  #         mkdir -p "$HOME/Arduino/libraries"
-  #         cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-  #         arduino-cli compile --clean --log --warnings all \
-  #                             --fqbn ${{ matrix.fqbn }} \
-  #                             --libraries="." \
-  #                             --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
-  #                             --export-binaries
+      # Compile the code which we want to flash
+      # REPO: the name of the repository which is also the link name
+      # check/set the arduino15 package library
+      # link the repo to the correct place for compiling under arduino-cli
+      # compile the code with the arduino-cli and export the binary files for flashing
+      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
+      - name: Compile Sketch
+        run: |
+          export TMPDIR=$HOME/tmp
+          mkdir -p $TMPDIR
+          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          arduino-cli compile --clean --log --warnings all \
+                              --fqbn ${{ matrix.fqbn }} \
+                              --libraries="." \
+                              --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} \
+                              --export-binaries
 
-  #       # Flashes the compiled HEX file onto the selected MCU
-  #       # REPO: the name of the repository which is also the link name
-  #       # HEXNAME: the board depended name of the HEX files
-  #       # SERIAL_NUM: the unique serial number of the hardware board according the board2port.yaml
-  #       # DEVICE: the flashing device according the board2port.yaml
-  #       # PORT: real PORT name of the attached hardware based on the SERIAL_NUM
-  #       # use the python based XMC flasher
+        # Flashes the compiled HEX file onto the selected MCU
+        # REPO: the name of the repository which is also the link name
+        # HEXNAME: the board depended name of the HEX files
+        # SERIAL_NUM: the unique serial number of the hardware board according the board2port.yaml
+        # DEVICE: the flashing device according the board2port.yaml
+        # PORT: real PORT name of the attached hardware based on the SERIAL_NUM
+        # use the python based XMC flasher
       - name: Flash
         run: |
           cd /opt/runner_support/
@@ -322,33 +322,17 @@ jobs:
           echo "Device Type:         " $DEVICE
 
           cd $HOME
-#              #python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
+          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
 
+      - name: Monitor
+        run: |
+          cd /opt/runner_support/
+          ./py_console.py --port ${{ env.PORT }} --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
 
-
-
-  #     - name: Monitor
-  #       run: |
-  #         cd /opt/runner_support/
-  #         echo "${{ env.DEVICELIST}}"
-  #         declare -a devicelist
-  #         devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
-  #         for line in "${devicelist[@]}"; do
-  #           if [[ $line =~ $device[1] ]]; then
-  #             readarray -td, device <<<"$line"
-  #             export SERIAL_NUM=${device[0]}
-  #             export DEVICE=${device[2]}
-  #             export TYPE=${device[6]}
-  #             export PORT=`./find_usb.sh $SERIAL_NUM`
-  #             ./py_console.py --port $PORT --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
-  #           fi
-  #         done
-
-  #     - name: HIL switch off
-  #       run: |
-  #         cd /opt/runner_support/
-  #         REPO="$(basename "$GITHUB_REPOSITORY")"
-  #         python py_checkusb.py --switch repo --namelist ${REPO} --onoff off
+      - name: HIL switch off
+        run: |
+          cd /opt/runner_support/
+          ./py_checkusb.py --switch repo --namelist ${{ env.repo }} --onoff off
 
   #     # - name: Upload binaries 
   #     #   uses: actions/upload-artifact@v4
