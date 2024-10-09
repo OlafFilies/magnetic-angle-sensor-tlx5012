@@ -79,14 +79,19 @@ jobs:
 
           declare -a typelist
           declare -a seriallist
-          mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
-          for TYPE in "${typelist[@]}"; 
-          do
-            declare -a serials
-            readarray -td, serials <<<"$TYPE"
-            seriallist+=(${serials[2]})
-          done;
-          export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
+          
+          
+          
+          # mapfile -t typelist < <(./py_checkusb.py --repo ${REPO} --full --batch)
+          # for TYPE in "${typelist[@]}"; 
+          # do
+          #   declare -a serials
+          #   readarray -td, serials <<<"$TYPE"
+          #   seriallist+=(${serials[2]})
+          # done;
+          # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
+
+          mser=$(./py_checkusb.py --repo ${REPO} --list serial --json)
           echo "serials_hil=$mser"
           echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
@@ -249,41 +254,42 @@ jobs:
 
 
 
-  # #############################################################################
-  # # This step allows HIL (Hardware in the loop), therefore
-  # # is searches for the given board/sensor combination and tries to find the actual port
-  # # on the self hosted runner. (see documentation for the board2port finder)
-  # flash:
+  #############################################################################
+  # This step allows HIL (Hardware in the loop), therefore
+  # is searches for the given board/sensor combination and tries to find the actual port
+  # on the self hosted runner. (see documentation for the board2port finder)
+  flash:
 
-  #   # We need a successful build before we can run the deploy
-  #   needs: [setup, build-ard]
+    # We need a successful build before we can run the deploy
+    #needs: [setup, build-ard]
+    needs: [setup]
 
-  #   # we run this on self hosted runner, use labels to be more specific
-  #   # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
-  #   runs-on:
-  #     - self-hosted
-  #     - X64
-  #     - Linux
+    # we run this on self hosted runner, use labels to be more specific
+    # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
+    runs-on:
+      - self-hosted
+      - X64
+      - Linux
 
-  #   strategy:
-  #     # flashing only one by one
-  #     max-parallel: 1
+    strategy:
+      # flashing only one by one
+      max-parallel: 1
 
-  #     # the code to flash
-  #     matrix:
-  #       # the code to flash
-  #       example: ${{ fromJson(needs.setup.outputs.matrix_hil) }}
+      # the code to flash
+      matrix:
+        # the code to flash
+        example: ${{ fromJson(needs.setup.outputs.matrix_hil) }}
 
-  #       # board packages we want to run
-  #       # attention the matrix spans over the fqbn not platform so that we can choose different boards
-  #       # this example compiles each sample code for Arduino Uno, XMC2Go and XMC4700 boards
-  #       fqbn: ${{ fromJson(needs.setup.outputs.fqbn_hil) }}
+        # board packages we want to run
+        # attention the matrix spans over the fqbn not platform so that we can choose different boards
+        # this example compiles each sample code for Arduino Uno, XMC2Go and XMC4700 boards
+        fqbn: ${{ fromJson(needs.setup.outputs.fqbn_hil) }}
 
-  #       # the serials of the hardware boards
-  #       serials: ${{ fromJson(needs.setup.outputs.serials_hil) }}
+        # the serials of the hardware boards
+        serials: ${{ fromJson(needs.setup.outputs.serials_hil) }}
 
-  #   # These are the steps which should run for each combination of fqbn and example code
-  #   steps:
+    # These are the steps which should run for each combination of fqbn and example code
+    steps:
 
   #     # Compile the code which we want to flash
   #     # REPO: the name of the repository which is also the link name
@@ -311,9 +317,10 @@ jobs:
   #       # DEVICE: the flashing device according the board2port.yaml
   #       # PORT: real PORT name of the attached hardware based on the SERIAL_NUM
   #       # use the python based XMC flasher
-  #     - name: Flash
-  #       run: |
-  #         cd /opt/runner_support/
+      - name: Flash
+        run: |
+          cd /opt/runner_support/
+          echo "Serials: ${{ matrix.serials }}"
   #         export PROJECT=${{ needs.setup.outputs.project }}
   #         export HEXNAME=`tr ':' '.' <<<"${{ matrix.fqbn }}"`
 
