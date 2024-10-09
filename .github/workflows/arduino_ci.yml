@@ -320,24 +320,12 @@ jobs:
   
 
 
-          devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
+          devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".[].\"${SERIAL_NUM}\"" --compact-output )
           echo "device_type=$devicelist"
 
-          for dev in $devicelist; do
-            echo "device=$dev"
+          for DEVICE in $devicelist; do
+            echo "Flash device:        " $DEVICE
           done
-
-
-  #         devicelist+=($(./py_checkusb.py --serial ${{ matrix.serials }} --batch))
-  #         export DEVICELIST=${devicelist[@]}
-  #         for line in "${devicelist[@]}"; do
-  #           if [[ $line =~ $device[1] ]]; then
-  #             readarray -td, device <<<"$line"
-
-  #             export DEVICE=${device[2]}
-  #             export TYPE=${device[6]}
-  #             echo "Flash device:        " $DEVICE
-  #             echo "Board type name:     " $TYPE
 
   #             cd $HOME
               #python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d $DEVICE -p $PORT -f ~/Arduino/libraries/${PROJECT}/${{ matrix.example }}/build/${HEXNAME}/*.hex
