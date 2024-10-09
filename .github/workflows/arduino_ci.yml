@@ -320,7 +320,7 @@ jobs:
   
 
 
-          devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\".[0]" --compact-output )
+          devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" | .[0] --compact-output )
           echo "device_type=$devicelist"
 
           for DEVICE in $devicelist; do
