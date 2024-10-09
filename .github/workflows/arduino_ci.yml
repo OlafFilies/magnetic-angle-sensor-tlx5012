@@ -56,20 +56,20 @@ jobs:
           echo "matrix_example=$mvar"
           echo matrix_example="$mvar" >> $GITHUB_OUTPUT
 
-          # cd $GITHUB_WORKSPACE/.github
-          # mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
-          # echo "fqbn_example=$mfqbn"
+          cd $GITHUB_WORKSPACE/.github
+          mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
+          echo "fqbn_example=$mfqbn"
 
-          # echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
+          echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
 
-          # export bad=`cat ./fqbn.yml | shyaml get-value hil.baud`
-          # echo "baud_hil=$bad" >> $GITHUB_OUTPUT
+          export bad=`cat ./fqbn.yml | shyaml get-value hil.baud`
+          echo "baud_hil=$bad" >> $GITHUB_OUTPUT
 
-          # export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.example`")
-          # echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
+          export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.example`")
+          echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
 
-          # export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
-          # echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
+          export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
+          echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
           # switch on USB ports and save serial ids for GH actions
           cd /opt/runner_support/
