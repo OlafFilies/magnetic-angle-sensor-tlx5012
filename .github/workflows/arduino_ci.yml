@@ -103,7 +103,8 @@ jobs:
           echo "test=$test"
           echo "question=$question"
 
-          #echo "serials_hil="$(`./py_checkusb.py --repo ${REPO} --list serial --json` | jq '."${REPO}"')
+          serials_hil=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"")
+          echo "serials_hil=$serials_hil"
           #echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
 
