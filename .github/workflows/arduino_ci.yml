@@ -93,8 +93,7 @@ jobs:
           # done;
           # export mser=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${seriallist[@]}")
 
-          mser=$(./py_checkusb.py --repo ${REPO} --list serial --json | jq '."$REPO"')
-          echo "serials_hil="$mser
+          echo "serials_hil="$(./py_checkusb.py --repo ${REPO} --list serial --json | jq '."${REPO}"')
 
           #echo serials_hil="$mser" >> $GITHUB_OUTPUT
 
