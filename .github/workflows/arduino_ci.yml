@@ -334,7 +334,8 @@ jobs:
       - name: Monitor
         run: |
           cd /opt/runner_support/
-          ./py_console.py --port ${{ env.PORT }} --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
+          echo "${{ env.port }}"
+          ./py_console.py --port ${{ env.port }} --baud ${{ needs.setup.outputs.baud_hil }} --timeout 10
 
       - name: HIL switch off
         run: |
