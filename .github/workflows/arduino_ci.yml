@@ -312,8 +312,9 @@ jobs:
           export PORT=`./find_usb.sh $SERIAL_NUM`
 
  
-          device=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".[0].\"${SERIAL_NUM}\"" --compact-output )
-
+          devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
+          DEVICE=($echo $devicelist | jq -r '.[0]')
+          echo "Flash device:        " $DEVICE
 
           # for device in "${devicelist[@]}"; do
           #     export TYPE=${device[6]}
