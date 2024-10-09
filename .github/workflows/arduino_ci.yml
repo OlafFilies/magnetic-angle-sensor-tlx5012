@@ -319,8 +319,7 @@ jobs:
           echo "Port found:          " $PORT
   
 
-
-          devicelist= $(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
+          devicelist=$(echo $(./py_checkusb.py --serial ${SERIAL_NUM} --list devtype --json) | jq ".\"${SERIAL_NUM}\"" --compact-output )
           echo "device_type=$devicelist"
 
           test=$(echo $devicelist | jq ".[0]")
