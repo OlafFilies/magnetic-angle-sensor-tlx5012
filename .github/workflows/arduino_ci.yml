@@ -60,12 +60,15 @@ jobs:
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           extra=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
+          echo "extra=${extra}"
+
+
+
           hil=$(echo $extra | jq ".\"hil\"" --compact-output )
           echo "hil=${hil}"  >> $GITHUB_OUTPUT
           fqbn=$(echo $extra | jq ".\"fqbn\"" --compact-output )
           echo "fqbn=${fqbn}"  >> $GITHUB_OUTPUT
 
-          echo "extra=${extra}"  >> $GITHUB_OUTPUT
 
           serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
           echo "serials=${serials}"  >> $GITHUB_OUTPUT
