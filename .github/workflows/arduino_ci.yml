@@ -284,7 +284,7 @@ jobs:
           echo "Device:              " $DEVICE
           echo "HIL                  " ${{ needs.setup.outputs.hil }}
 
-          hil=toJSON(${{ needs.setup.outputs.hil }})
+          hil=${{ toJson(needs.setup.outputs.hil) }}
           echo $hil
 
           ex=$(echo ${hil} | jq ".\"example\"" -r --compact-output )
