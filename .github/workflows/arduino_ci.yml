@@ -65,6 +65,8 @@ jobs:
           fqbn=$(echo $extra | jq ".\"fqbn\"" --compact-output )
           echo "fqbn=${fqbn}"  >> $GITHUB_OUTPUT
 
+          echo "extra=${extra}"  >> $GITHUB_OUTPUT
+
           serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
           echo "serials=${serials}"  >> $GITHUB_OUTPUT
 
@@ -78,6 +80,7 @@ jobs:
       hil: ${{ steps.startup.outputs.hil }}
       fqbn: ${{ steps.startup.outputs.fqbn }}
       examples: ${{ steps.startup.outputs.examples }}
+      extra: ${{ steps.startup.outputs.extra }}
 
 
   #############################################################################
@@ -239,6 +242,10 @@ jobs:
           PROJECT=${{ needs.setup.outputs.project }}
           SERIALID=${{ matrix.serials }}
           HIL=${{ toJson(needs.setup.outputs.hil) }}
+
+          extra=${{ toJson(needs.setup.outputs.extra) }}
+          echo "extra=${extra}"
+
           PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
           TYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list type --json) | jq ".\"${SERIALID}\"|.[0]" -r)
           DEVTYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list devtype --json) | jq ".\"${SERIALID}\"|.[0]" -r)
