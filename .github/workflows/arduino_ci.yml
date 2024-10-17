@@ -127,11 +127,11 @@ jobs:
           echo $HOME 
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
-          cd ~/Arduino/libraries/${{ needs.setup.outputs.project }}
+          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
           echo "${fqbn}"
-          arduino-cli compile ${fqbn} --libraries="." --libraries="~/Arduino/libraries/." ${{ matrix.example }} --verbose
+          arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
