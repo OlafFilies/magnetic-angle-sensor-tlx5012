@@ -247,7 +247,8 @@ jobs:
           SERIALID=${{ matrix.serials }}
           HIL=${{ toJson(needs.setup.outputs.hil) }}
           PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
-          TYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list type    --json) | jq ".\"${SERIALID}\"|.[0]" -r)
+          TYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list type --json) | jq ".\"${SERIALID}\"|.[0]" -r)
+          DEVTYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list devtype --json) | jq ".\"${SERIALID}\"|.[0]" -r)
           DEVICE=$(echo $(./py_checkusb.py --serial ${SERIALID} --list device  --json) | jq ".\"${SERIALID}\"|.[0]" -r)
           FQBN=`tr '.' ':' <<<"${DEVICE}"`
 
@@ -256,6 +257,7 @@ jobs:
           echo "serials=$SERIALID" >> $GITHUB_ENV
           echo "port=$PORT" >> $GITHUB_ENV
           echo "type=$TYPE" >> $GITHUB_ENV
+          echo "devtype=$DEVTYPE" >> $GITHUB_ENV
           echo "fqbn=$FQBN" >> $GITHUB_ENV
           echo "device=$DEVICE" >> $GITHUB_ENV
           echo "example="$(echo ${HIL} | jq ".\"example\"" -r --compact-output ) >> $GITHUB_ENV
@@ -265,7 +267,8 @@ jobs:
           echo "Project name:        " $PROJECT
           echo "Device Serial ID:    " $SERIALID
           echo "Port found:          " $PORT
-          echo "Device Type:         " $TYPE
+          echo "Type:                " $TYPE
+          echo "Device Type:         " $DEVTYPE
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
           echo "Example:             " $(echo ${HIL} | jq ".\"example\"" -r --compact-output )
@@ -300,7 +303,7 @@ jobs:
       - name: Flash
         run: |
           cd $HOME
-          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.fqbn }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
+          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.devtype }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
 
 
       # Monitoring the serial output from the attached and flashed hardware and collecting
