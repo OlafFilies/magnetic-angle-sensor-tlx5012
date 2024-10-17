@@ -57,14 +57,15 @@ jobs:
 
 
           declare -a data
-          for x in $GITHUB_WORKSPACE/src/framework/arduino/examples/*;
+          cd $GITHUB_WORKSPACE/src/framework/arduino/
+          for x in examples/*;
           do 
             data+=($x);
           done;
           export examples=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo examples="$examples" >> $GITHUB_OUTPUT
 
-          xfp=$(./py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
+          xfp=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
           echo "xfp=${xfp}" >> $GITHUB_OUTPUT
 
 
@@ -130,9 +131,6 @@ jobs:
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-
-          echo  ${{ matrix.example }}
-
           arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
