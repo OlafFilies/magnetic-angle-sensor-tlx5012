@@ -124,6 +124,7 @@ jobs:
       # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
       - name: Compile
         run: |
+          echo $HOME 
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
           cd ~/Arduino/libraries/${{ needs.setup.outputs.project }}
