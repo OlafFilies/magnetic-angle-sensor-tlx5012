@@ -64,7 +64,7 @@ jobs:
           export examples=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo examples="$examples" >> $GITHUB_OUTPUT
 
-          extra=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
+          extra=$(./py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
           echo "extra=${extra}"
           echo "extra=${extra}" >> $GITHUB_OUTPUT
 
@@ -144,6 +144,8 @@ jobs:
           echo $fqbn
           extra=${{ toJson(needs.setup.outputs.extra) }}
           echo "extra=${extra}"
+
+          echo $(echo ${extra} | jq ".\"fqbn\"" -r --compact-output )
 
           #arduino-cli compile  --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
@@ -253,7 +255,7 @@ jobs:
           SERIALID=${{ matrix.serials }}
           HIL=${{ toJson(needs.setup.outputs.hil) }}
 
-          extra=${{ toJson(needs.setup.outputs.extra) }}
+          EXTRA=${{ toJson(needs.setup.outputs.extra) }}
           echo "extra=${extra}"
 
           PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
@@ -270,8 +272,8 @@ jobs:
           echo "devtype=$DEVTYPE" >> $GITHUB_ENV
           echo "fqbn=$FQBN" >> $GITHUB_ENV
           echo "device=$DEVICE" >> $GITHUB_ENV
-          echo "example="$(echo ${HIL} | jq ".\"example\"" -r --compact-output ) >> $GITHUB_ENV
-          echo "baud="$(echo ${HIL} | jq ".\"baud\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "example="$(echo ${EXTRA} | jq ".\"hil.example\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "baud="$(echo ${EXTRA} | jq ".\"hil.baud\"" -r --compact-output ) >> $GITHUB_ENV
 
           echo "Repository name:     " $REPO
           echo "Project name:        " $PROJECT
@@ -281,8 +283,8 @@ jobs:
           echo "Device Type:         " $DEVTYPE
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
-          echo "Example:             " $(echo ${HIL} | jq ".\"example\"" -r --compact-output )
-          echo "Baud example:        " $(echo ${HIL} | jq ".\"baud\"" -r --compact-output )
+          echo "Example:             " $(echo ${EXTRA} | jq ".\"hil.example\"" -r --compact-output )
+          echo "Baud example:        " $(echo ${EXTRA} | jq ".\"hil.baud\"" -r --compact-output )
 
       # Compile the code which we want to flash
       # REPO: the name of the repository which is also the link name
