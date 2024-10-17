@@ -129,8 +129,8 @@ jobs:
           cd ~/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-          echo "fqbn=${fqbn}"
-          arduino-cli compile ${ fqbn } --libraries="." --libraries="~/Arduino/libraries/." ${{ matrix.example }} --verbose
+          echo "${fqbn}"
+          arduino-cli compile ${fqbn} --libraries="." --libraries="~/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
