@@ -56,13 +56,13 @@ jobs:
 
           export $(xfp-dev arduino workspace-setup project-name)
           echo $(xfp-dev arduino workspace-setup project-name)
+          echo $PROJECTNAME
 
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           extra=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
-          echo $extra
           hil=$(echo $extra | jq ".\"hil\"" --compact-output )
           echo "hil=${hil}"  >> $GITHUB_OUTPUT
           fqbn=$(echo $extra | jq ".\"fqbn\"" --compact-output )
@@ -136,9 +136,8 @@ jobs:
           mkdir -p $TMPDIR
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
 
-          FQBNS=${{ toJson(needs.setup.outputs.fqbn) }}
-          fqbn="$(echo ${FQBNS} | jq ".\"fqbn\"" -r --compact-output )
-          echo $fqbn
+          FQBNS=${{ needs.setup.outputs.fqbn }}
+          echo $FQBNS
 
           #arduino-cli compile ${{ needs.setup.outputs.fqbn_example }} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
