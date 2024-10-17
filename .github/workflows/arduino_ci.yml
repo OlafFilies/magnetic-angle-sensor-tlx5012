@@ -341,7 +341,7 @@ jobs:
     # we run this no matter if before fails
     if: always()
     # wait on first setup run before starting main function
-    needs: [setup, make]
+    needs: [setup, flash]
 
     # we run this on self hosted runner, use labels to be more specific
     # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
