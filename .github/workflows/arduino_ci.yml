@@ -271,7 +271,6 @@ jobs:
           echo "fqbn=$FQBN" >> $GITHUB_ENV
           echo "device=$DEVICE" >> $GITHUB_ENV
           echo "example="$(echo ${HIL} | jq ".\"example\"" -r --compact-output ) >> $GITHUB_ENV
-          echo "fqbn="$(echo ${HIL} | jq ".\"fqbn\"" -r --compact-output ) >> $GITHUB_ENV
           echo "baud="$(echo ${HIL} | jq ".\"baud\"" -r --compact-output ) >> $GITHUB_ENV
 
           echo "Repository name:     " $REPO
@@ -282,59 +281,58 @@ jobs:
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
           echo "Example:             " $(echo ${HIL} | jq ".\"example\"" -r --compact-output )
-          echo "FQBN example:        " $(echo ${HIL} | jq ".\"fqbn\"" -r --compact-output )
           echo "Baud example:        " $(echo ${HIL} | jq ".\"baud\"" -r --compact-output )
 
-      # # Compile the code which we want to flash
-      # # REPO: the name of the repository which is also the link name
-      # # check/set the arduino15 package library
-      # # link the repo to the correct place for compiling under arduino-cli
-      # # compile the code with the arduino-cli and export the binary files for flashing
-      # # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
-      # - name: Compile Sketch
-      #   run: |
-      #     export TMPDIR=$HOME/tmp
-      #     mkdir -p $TMPDIR
-      #     ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
-      #     mkdir -p "$HOME/Arduino/libraries"
-      #     cd $HOME/Arduino/libraries/${{ env.project }}
-      #     arduino-cli compile --clean --log --warnings all \
-      #                         --fqbn ${{ env.fqbn }} \
-      #                         --libraries="." \
-      #                         --libraries=${{ matrix.example }} \
-      #                         --export-binaries
+      # Compile the code which we want to flash
+      # REPO: the name of the repository which is also the link name
+      # check/set the arduino15 package library
+      # link the repo to the correct place for compiling under arduino-cli
+      # compile the code with the arduino-cli and export the binary files for flashing
+      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
+      - name: Compile Sketch
+        run: |
+          export TMPDIR=$HOME/tmp
+          mkdir -p $TMPDIR
+          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $HOME/Arduino/libraries/${{ env.project }}
+          arduino-cli compile --clean --log --warnings all \
+                              --fqbn ${{ env.fqbn }} \
+                              --libraries="." \
+                              --libraries=${{ env.example }} \
+                              --export-binaries
 
-      #   # Flashes the compiled HEX file onto the selected MCU
-      #   # REPO: the name of the repository which is also the link name
-      #   # HEXNAME: the board depended name of the HEX files
-      #   # SERIALID: the unique serial number of the hardware board according the board2port.yaml
-      #   # DEVICE: the flashing device according the board2port.yaml
-      #   # PORT: real PORT name of the attached hardware based on the SERIALID
-      #   # use the python based XMC flasher
-      # - name: Flash
-      #   run: |
-      #     cd $HOME
-      #     python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.device }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ matrix.example }}/build/${{ env.hexname }}/*.hex
+        # Flashes the compiled HEX file onto the selected MCU
+        # REPO: the name of the repository which is also the link name
+        # HEXNAME: the board depended name of the HEX files
+        # SERIALID: the unique serial number of the hardware board according the board2port.yaml
+        # DEVICE: the flashing device according the board2port.yaml
+        # PORT: real PORT name of the attached hardware based on the SERIALID
+        # use the python based XMC flasher
+      - name: Flash
+        run: |
+          cd $HOME
+          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.device }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.fqbn }}/*.hex
 
 
-      # # Monitoring the serial output from the attached and flashed hardware and collecting
-      # # ERROR, Warning and statistical data for reporting
-      # - name: Monitor
-      #   run: |
-      #     if [ "${{ env.port }}" != 'null' ]; then
-      #       echo "need to monitor"
-      #       timeout 1m /opt/runner_support/py_console.py --port ${{ env.port }} --baud 115200 --report ${HOME}/Arduino/libraries/${{ env.repo }}/build/build/${{ env.device }}/report.txt
-      #     else
-      #       echo "No port found"
-      #     fi
+      # Monitoring the serial output from the attached and flashed hardware and collecting
+      # ERROR, Warning and statistical data for reporting
+      - name: Monitor
+        run: |
+          if [ "${{ env.port }}" != 'null' ]; then
+            echo "need to monitor"
+            timeout 1m /opt/runner_support/py_console.py --port ${{ env.port }} --baud ${{ env.baud }} --report ${HOME}/Arduino/libraries/${{ env.repo }}/build/build/${{ env.device }}/report.txt
+          else
+            echo "No port found"
+          fi
 
-      # # Upload the compiled HEX files to the GitHub server
-      # - name: Upload binaries 
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ env.type }}_${{ env.serials }}
-      #     path: ~/Arduino/libraries/${{ env.repo }}/build/build/${{ env.device }}/*
-      #     if-no-files-found: ignore
+      # Upload the compiled HEX files to the GitHub server
+      - name: Upload binaries 
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.type }}_${{ env.serials }}
+          path: ~/Arduino/libraries/${{ env.repo }}/build/build/${{ env.device }}/*
+          if-no-files-found: ignore
 
 
   #############################################################################
