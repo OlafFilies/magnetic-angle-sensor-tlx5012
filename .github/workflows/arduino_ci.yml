@@ -55,18 +55,6 @@ jobs:
           # echo "matrix_example=$mvar"
           # echo matrix_example="$mvar" >> $GITHUB_OUTPUT
 
-          # fqbn=$(echo $(/opt/runner_support/py_checkusb.py --readyaml ./fqbn.yml --json) | jq ".\"${fqbn}\"" --compact-output )
-
-          # mfqbn=$(cat ./fqbn.yml | shyaml get-values fqbn | awk '{printf " --fqbn=%s", $0}')
-          # echo "fqbn_example=$mfqbn"
-          # echo "fqbn_example=$mfqbn" >> $GITHUB_OUTPUT
-          # export bad=`cat ./fqbn.yml | shyaml get-value hil.baud`
-          # echo "baud_hil=$bad" >> $GITHUB_OUTPUT
-          # export exp=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.example`")
-          # echo "matrix_hil=$exp" >> $GITHUB_OUTPUT
-          # export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
-          # echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
-
 
 
           export $(xfp-dev arduino workspace-setup project-name)
@@ -299,7 +287,7 @@ jobs:
           arduino-cli compile --clean --log --warnings all \
                               --fqbn ${{ env.fqbn }} \
                               --libraries="." \
-                              --libraries=${{ env.example }} \
+                              --libraries="$HOME/Arduino/libraries/." ${{ env.example }} \
                               --export-binaries
 
         # Flashes the compiled HEX file onto the selected MCU
