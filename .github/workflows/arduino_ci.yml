@@ -44,9 +44,9 @@ jobs:
       # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: startup
         run: |
+          export $(xfp-dev arduino workspace-setup project-name)
 
           cd $GITHUB_WORKSPACE/src/framework/arduino
-          export $(xfp-dev arduino workspace-setup project-name)
           declare -a data
           for x in examples/*;
           do 
@@ -55,12 +55,9 @@ jobs:
           export examples=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo examples="$examples" >> $GITHUB_OUTPUT
 
-          cd /opt/runner_support/
-          REPO="$(basename "$GITHUB_REPOSITORY")"
-          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
-
           extra=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
           echo "extra=${extra}"
+          echo "extra=${extra}" >> $GITHUB_OUTPUT
 
 
 
@@ -69,6 +66,11 @@ jobs:
           fqbn=$(echo $extra | jq ".\"fqbn\"" --compact-output )
           echo "fqbn=${fqbn}"  >> $GITHUB_OUTPUT
 
+
+
+          cd /opt/runner_support/
+          REPO="$(basename "$GITHUB_REPOSITORY")"
+          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
           echo "serials=${serials}"  >> $GITHUB_OUTPUT
@@ -138,7 +140,12 @@ jobs:
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          arduino-cli compile ${{ needs.setup.outputs.fqbn }} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
+          fqbn=${{ needs.setup.outputs.fqbn }}
+          echo $fqbn
+          extra=${{ toJson(needs.setup.outputs.extra) }}
+          echo "extra=${extra}"
+
+          #arduino-cli compile  --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
