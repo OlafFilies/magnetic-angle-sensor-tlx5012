@@ -56,9 +56,8 @@ jobs:
           ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
-          cd $GITHUB_WORKSPACE/src/framework/arduino
           declare -a data
-          for x in examples/*;
+          for x in $GITHUB_WORKSPACE/src/framework/arduino/examples/*;
           do 
             data+=($x);
           done;
