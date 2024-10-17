@@ -67,9 +67,13 @@ jobs:
           # export fqb=$(jq --compact-output --null-input '$ARGS.positional' --args -- "`cat ./fqbn.yml | shyaml get-value hil.fqbn`")
           # echo "fqbn_hil=$fqb" >> $GITHUB_OUTPUT
 
+
+
+          export $(xfp-dev arduino workspace-setup project-name)
+          echo $(xfp-dev arduino workspace-setup project-name)
+
           cd /opt/runner_support/
           REPO="$(basename "$GITHUB_REPOSITORY")"
-          export $(xfp-dev arduino workspace-setup project-name)
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           extra=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
@@ -279,6 +283,14 @@ jobs:
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
           echo "HIL                  " ${{ needs.setup.outputs.hil }}
+
+          ex=$(echo ${{ needs.setup.outputs.hil }} | jq ".\"example\"" -r --compact-output )
+          ma=$(echo ${{ needs.setup.outputs.hil }} | jq ".\"fqbn\"" -r --compact-output )
+          bd=$(echo ${{ needs.setup.outputs.hil }} | jq ".\"baud\"" -r --compact-output )
+          echo $ex
+          echo $ma
+          echo $bd
+
 
       # # Compile the code which we want to flash
       # # REPO: the name of the repository which is also the link name
