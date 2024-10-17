@@ -65,17 +65,7 @@ jobs:
           echo examples="$examples" >> $GITHUB_OUTPUT
 
           xfp=$(./py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
-          echo "xfp=${xfp}"
           echo "xfp=${xfp}" >> $GITHUB_OUTPUT
-
-
-
-          hil=$(echo $xfp | jq ".\"hil\"" --compact-output )
-          echo "hil=${hil}"  >> $GITHUB_OUTPUT
-          fqbn=$(echo $xfp | jq ".\"fqbn\"" --compact-output )
-          echo "fqbn=${fqbn}"  >> $GITHUB_OUTPUT
-
-
 
 
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
@@ -84,9 +74,6 @@ jobs:
       serials: ${{ steps.startup.outputs.serials }}
       examples: ${{ steps.startup.outputs.examples }}
       xfp: ${{ steps.startup.outputs.xfp }}
-
-      hil: ${{ steps.startup.outputs.hil }}
-      fqbn: ${{ steps.startup.outputs.fqbn }}
 
   #############################################################################
   # The build job compiles the sample code for different boards
@@ -139,10 +126,10 @@ jobs:
         run: |
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
-          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          cd ~/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-          arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
+          arduino-cli compile ${fqbn} --libraries="." --libraries="~/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
