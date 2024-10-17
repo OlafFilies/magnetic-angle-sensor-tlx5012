@@ -46,6 +46,16 @@ jobs:
         run: |
           export $(xfp-dev arduino workspace-setup project-name)
 
+          cd /opt/runner_support/
+          REPO="$(basename "$GITHUB_REPOSITORY")"
+          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
+
+          serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
+          echo "serials=${serials}"  >> $GITHUB_OUTPUT
+
+          ./py_checkusb.py --switch repo --namelist $REPO --onoff on
+
+
           cd $GITHUB_WORKSPACE/src/framework/arduino
           declare -a data
           for x in examples/*;
@@ -67,15 +77,6 @@ jobs:
           echo "fqbn=${fqbn}"  >> $GITHUB_OUTPUT
 
 
-
-          cd /opt/runner_support/
-          REPO="$(basename "$GITHUB_REPOSITORY")"
-          echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
-
-          serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
-          echo "serials=${serials}"  >> $GITHUB_OUTPUT
-
-          ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
