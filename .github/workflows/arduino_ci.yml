@@ -128,9 +128,9 @@ jobs:
           mkdir -p $TMPDIR
           cd ~/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
-          fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
+          export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
           echo "fqbn=${fqbn}"
-          # arduino-cli compile ${fqbn} --libraries="." --libraries="~/Arduino/libraries/." ${{ matrix.example }} --verbose
+          arduino-cli compile ${{ fqbn }} --libraries="." --libraries="~/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
@@ -238,7 +238,7 @@ jobs:
           SERIALID=${{ matrix.serials }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           echo "xfp=${xfp}"
-          echo $(echo ${xfp} | jq ".\"hil.example\"" -r --compact-output )
+          echo $(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output )
 
 
           PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
