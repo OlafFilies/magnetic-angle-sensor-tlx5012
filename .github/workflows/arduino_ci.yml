@@ -62,6 +62,7 @@ jobs:
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
           extra=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
+          echo $extra
           echo "extra=$extra" >> $GITHUB_OUTPUT
 
           serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
@@ -213,8 +214,7 @@ jobs:
   flash:
 
     # We need a successful build before we can run the deploy
-    #needs: [setup, build-ard]
-    needs: [setup]
+    needs: [setup, build-ard]
 
     # we run this on self hosted runner, use labels to be more specific
     # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
