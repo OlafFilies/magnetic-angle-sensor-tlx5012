@@ -300,7 +300,7 @@ jobs:
       - name: Flash
         run: |
           cd $HOME
-          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.device }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.fqbn }}/*.hex
+          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.fqbn }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
 
 
       # Monitoring the serial output from the attached and flashed hardware and collecting
