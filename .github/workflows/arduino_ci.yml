@@ -243,8 +243,6 @@ jobs:
     continue-on-error: true
 
     strategy:
-      # flashing only one by one
-      max-parallel: 1
 
       # the code to flash
       matrix:
