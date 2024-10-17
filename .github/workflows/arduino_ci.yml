@@ -65,7 +65,8 @@ jobs:
           export examples=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo examples="$examples" >> $GITHUB_OUTPUT
 
-          xfp=$(/opt/runner_support/py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
+          cd /opt/runner_support/
+          xfp=$(./py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
           echo "xfp=${xfp}" >> $GITHUB_OUTPUT
 
 
