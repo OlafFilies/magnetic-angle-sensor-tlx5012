@@ -115,7 +115,7 @@ jobs:
       # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
       - name: Generate Arduino Library
         run: |
-          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
           mkdir -p "$HOME/Arduino/libraries"
           cd $GITHUB_WORKSPACE/
           xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
@@ -130,7 +130,9 @@ jobs:
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-          echo "${fqbn}"
+
+          echo  ${{ matrix.example }}
+
           arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
@@ -175,7 +177,7 @@ jobs:
   #     # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
   #     - name: Set and check environment, install repos
   #       run: |
-  #         ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+  #         ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
   #         mkdir -p "$HOME/Arduino/libraries"
   #         cd $GITHUB_WORKSPACE/
   #         xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
@@ -280,7 +282,7 @@ jobs:
         run: |
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
-          ln -sfn /opt/XMC-for-Arduino ~/.arduino15/packages/Infineon
+          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
           mkdir -p "$HOME/Arduino/libraries"
           cd $HOME/Arduino/libraries/${{ env.project }}
           arduino-cli compile --clean --log --warnings all \
@@ -299,7 +301,7 @@ jobs:
       - name: Flash
         run: |
           cd $HOME
-          python ~/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.devtype }} -p ${{ env.port }} -f ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
+          python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.devtype }} -p ${{ env.port }} -f $HOME/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
 
 
       # Monitoring the serial output from the attached and flashed hardware and collecting
@@ -318,7 +320,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.type }}_${{ env.serials }}
-          path: ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*
+          path: $HOME/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*
           if-no-files-found: ignore
 
 
