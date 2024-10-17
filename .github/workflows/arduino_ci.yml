@@ -284,9 +284,12 @@ jobs:
           echo "Device:              " $DEVICE
           echo "HIL                  " ${{ needs.setup.outputs.hil }}
 
-          ex=$(echo ${{ needs.setup.outputs.hil }} | jq ".\"example\"" -r --compact-output )
-          ma=$(echo ${{ needs.setup.outputs.hil }} | jq ".\"fqbn\"" -r --compact-output )
-          bd=$(echo ${{ needs.setup.outputs.hil }} | jq ".\"baud\"" -r --compact-output )
+          hil=toJSON(${{ needs.setup.outputs.hil }})
+          echo $hil
+
+          ex=$(echo ${hil} | jq ".\"example\"" -r --compact-output )
+          ma=$(echo ${hil} | jq ".\"fqbn\"" -r --compact-output )
+          bd=$(echo ${hil} | jq ".\"baud\"" -r --compact-output )
           echo $ex
           echo $ma
           echo $bd
