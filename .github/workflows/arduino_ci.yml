@@ -89,7 +89,7 @@ jobs:
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
     outputs:
       project: ${{ steps.startup.outputs.project }}
-      serials: ${{ steps.startup.outputs.serials_hil }}
+      serials: ${{ steps.startup.outputs.serials }}
       hil: ${{ steps.startup.outputs.matrix_hil }}
 
       # fqbn_example: ${{ steps.set-matrix.outputs.fqbn_example }}
