@@ -96,11 +96,6 @@ jobs:
       serials: ${{ steps.startup.outputs.serials }}
       hil: ${{ steps.startup.outputs.matrix_hil }}
 
-      # fqbn_example: ${{ steps.set-matrix.outputs.fqbn_example }}
-      # baud_hil: ${{ steps.set-matrix.outputs.baud_hil }}
-
-
-
 
   # #############################################################################
   # # The build job compiles the sample code for different boards
@@ -262,6 +257,7 @@ jobs:
           REPO="$(basename "$GITHUB_REPOSITORY")"
           PROJECT=${{ needs.setup.outputs.project }}
           SERIALID=${{ matrix.serials }}
+          HIL=${{ toJson(needs.setup.outputs.hil) }}
           PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
           TYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list type    --json) | jq ".\"${SERIALID}\"|.[0]" -r)
           DEVICE=$(echo $(./py_checkusb.py --serial ${SERIALID} --list device  --json) | jq ".\"${SERIALID}\"|.[0]" -r)
@@ -274,6 +270,9 @@ jobs:
           echo "type=$TYPE" >> $GITHUB_ENV
           echo "fqbn=$FQBN" >> $GITHUB_ENV
           echo "device=$DEVICE" >> $GITHUB_ENV
+          echo "example="$(echo ${HIL} | jq ".\"example\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "fqbn="$(echo ${HIL} | jq ".\"fqbn\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "baud="$(echo ${HIL} | jq ".\"baud\"" -r --compact-output ) >> $GITHUB_ENV
 
           echo "Repository name:     " $REPO
           echo "Project name:        " $PROJECT
@@ -282,18 +281,9 @@ jobs:
           echo "Device Type:         " $TYPE
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
-          echo "HIL                  " ${{ needs.setup.outputs.hil }}
-
-          hil=${{ toJson(needs.setup.outputs.hil) }}
-          echo $hil
-
-          ex=$(echo ${hil} | jq ".\"example\"" -r --compact-output )
-          ma=$(echo ${hil} | jq ".\"fqbn\"" -r --compact-output )
-          bd=$(echo ${hil} | jq ".\"baud\"" -r --compact-output )
-          echo $ex
-          echo $ma
-          echo $bd
-
+          echo "Example:             " $(echo ${HIL} | jq ".\"example\"" -r --compact-output )
+          echo "FQBN example:        " $(echo ${HIL} | jq ".\"fqbn\"" -r --compact-output )
+          echo "Baud example:        " $(echo ${HIL} | jq ".\"baud\"" -r --compact-output )
 
       # # Compile the code which we want to flash
       # # REPO: the name of the repository which is also the link name
