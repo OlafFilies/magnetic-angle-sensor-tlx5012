@@ -319,11 +319,14 @@ jobs:
       # ERROR, Warning and statistical data for reporting
       - name: Monitor
         run: |
+          echo $HOME
+          echo ${HOME}/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}
           if [ "${{ env.port }}" != 'null' ]; then
             echo "need to monitor"
             timeout 1m /opt/runner_support/py_console.py \
                           --port ${{ env.port }} \
                           --baud ${{ env.baud }} \
+                          --runtime 20 \
                           --report ${HOME}/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/report.txt
           else
             echo "No port found"
