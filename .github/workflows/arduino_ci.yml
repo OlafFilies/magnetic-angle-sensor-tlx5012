@@ -77,62 +77,62 @@ jobs:
       examples: ${{ steps.startup.outputs.examples }}
       xfp: ${{ steps.startup.outputs.xfp }}
 
-  #############################################################################
-  # The build job compiles the sample code for different boards
-  build-ard:
+  # #############################################################################
+  # # The build job compiles the sample code for different boards
+  # build-ard:
 
-    # wait on first setup run before starting main function
-    needs: setup
+  #   # wait on first setup run before starting main function
+  #   needs: setup
 
-    # we run this on self hosted runner, use labels to be more specific
-    # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
-    runs-on:
-      - self-hosted
-      - X64
-      - Linux
+  #   # we run this on self hosted runner, use labels to be more specific
+  #   # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
+  #   runs-on:
+  #     - self-hosted
+  #     - X64
+  #     - Linux
 
-    # which combination of sample code and boards should run
-    # for this example of 2 sample codes and 3 boards a total of 2x3=6 runners have to work.
-    # if we have only 4 runner then these 4 are started and the last 2 are waiting until they can start
-    strategy:
+  #   # which combination of sample code and boards should run
+  #   # for this example of 2 sample codes and 3 boards a total of 2x3=6 runners have to work.
+  #   # if we have only 4 runner then these 4 are started and the last 2 are waiting until they can start
+  #   strategy:
 
-      matrix:
-        # List of all examples in the lib to compile
-        example: ${{ fromJson(needs.setup.outputs.examples) }}
+  #     matrix:
+  #       # List of all examples in the lib to compile
+  #       example: ${{ fromJson(needs.setup.outputs.examples) }}
 
-    # These are the steps which should run for each combination of fqbn and example code
-    steps:
-      # checkout the latest github action code
-      - name: Checkout actions
-        uses: actions/checkout@v4
+  #   # These are the steps which should run for each combination of fqbn and example code
+  #   steps:
+  #     # checkout the latest github action code
+  #     - name: Checkout actions
+  #       uses: actions/checkout@v4
 
-      # checkout the latest arduino-cli compiler
-      - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@master
+  #     # checkout the latest arduino-cli compiler
+  #     - name: Setup Arduino CLI
+  #       uses: arduino/setup-arduino-cli@master
 
-      # prepare the runner for the repo data
-      # setup links inside the self hosted runner for correct directory setup
-      # REPO is the base name of the library which is linked to the right directory structure
-      # check wether the .arduino15 packages dir is available
-      # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
-      - name: Generate Arduino Library
-        run: |
-          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
-          mkdir -p "$HOME/Arduino/libraries"
-          cd $GITHUB_WORKSPACE/
-          xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
+  #     # prepare the runner for the repo data
+  #     # setup links inside the self hosted runner for correct directory setup
+  #     # REPO is the base name of the library which is linked to the right directory structure
+  #     # check wether the .arduino15 packages dir is available
+  #     # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
+  #     - name: Generate Arduino Library
+  #       run: |
+  #         ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
+  #         mkdir -p "$HOME/Arduino/libraries"
+  #         cd $GITHUB_WORKSPACE/
+  #         xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
 
-      # Compile the sample code for the selected board and board support package with the arduino compiler
-      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
-      - name: Compile
-        run: |
-          echo $HOME 
-          export TMPDIR=$HOME/tmp
-          mkdir -p $TMPDIR
-          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-          xfp=${{ toJson(needs.setup.outputs.xfp) }}
-          export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-          arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
+  #     # Compile the sample code for the selected board and board support package with the arduino compiler
+  #     # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
+  #     - name: Compile
+  #       run: |
+  #         echo $HOME 
+  #         export TMPDIR=$HOME/tmp
+  #         mkdir -p $TMPDIR
+  #         cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+  #         xfp=${{ toJson(needs.setup.outputs.xfp) }}
+  #         export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
+  #         arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
 
@@ -240,7 +240,9 @@ jobs:
           SERIALID=${{ matrix.serials }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
           echo "xfp=${xfp}"
-          echo $(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output )
+          echo "one" $(echo ${xfp} | jq ".\"hil\"" -r --compact-output )
+          echo "two" $(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output )
+
 
 
           PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
@@ -268,8 +270,8 @@ jobs:
           echo "Device Type:         " $DEVTYPE
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
-          echo "Example:             " $(echo ${xfp} | jq ".\"hil.example\"" -r --compact-output )
-          echo "Baud example:        " $(echo ${xfp} | jq ".\"hil.baud\"" -r --compact-output )
+          echo "Example:             " $(echo ${xfp} | jq ".\"example\"" -r --compact-output )
+          echo "Baud example:        " $(echo ${xfp} | jq ".\"baud\"" -r --compact-output )
 
       # Compile the code which we want to flash
       # REPO: the name of the repository which is also the link name
