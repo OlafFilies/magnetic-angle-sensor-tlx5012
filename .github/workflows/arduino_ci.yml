@@ -164,7 +164,7 @@ jobs:
 
       matrix:
         # List of all examples in the lib to compile
-        example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
+        example: ${{ fromJson(needs.setup.outputs.examples) }}
 
     steps:
       # checkout the latest github action code
