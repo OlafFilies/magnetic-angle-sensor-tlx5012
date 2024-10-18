@@ -260,8 +260,8 @@ jobs:
           echo "devtype=$DEVTYPE" >> $GITHUB_ENV
           echo "fqbn=$FQBN" >> $GITHUB_ENV
           echo "device=$DEVICE" >> $GITHUB_ENV
-          echo "example="$(echo ${xfp} | jq ".\"hil.example\"" -r --compact-output ) >> $GITHUB_ENV
-          echo "baud="$(echo ${xfp} | jq ".\"hil.baud\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "example="$(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "baud="$(echo ${xfp} | jq ".\"hil\".\"baud\"" -r --compact-output ) >> $GITHUB_ENV
 
           echo "Repository name:     " $REPO
           echo "Project name:        " $PROJECT
@@ -271,8 +271,8 @@ jobs:
           echo "Device Type:         " $DEVTYPE
           echo "FQBN:                " $FQBN
           echo "Device:              " $DEVICE
-          echo "Example:             " $(echo ${xfp} | jq ".\"example\"" -r --compact-output )
-          echo "Baud example:        " $(echo ${xfp} | jq ".\"baud\"" -r --compact-output )
+          echo "Example:             " $(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output )
+          echo "Baud example:        " $(echo ${xfp} | jq ".\"hil\".\"baud\"" -r --compact-output )
 
       # Compile the code which we want to flash
       # REPO: the name of the repository which is also the link name
