@@ -327,7 +327,7 @@ jobs:
                           --port ${{ env.port }} \
                           --baud ${{ env.baud }} \
                           --runtime 20 \
-                          --report ${HOME}/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/report.txt
+                          --report ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/report.txt
           else
             echo "No port found"
           fi
@@ -337,7 +337,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.type }}_${{ env.serials }}
-          path: $HOME/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*
+          path: ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*
           if-no-files-found: ignore
 
 
