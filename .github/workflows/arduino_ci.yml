@@ -44,18 +44,11 @@ jobs:
       # Fetch variables and move them to the GITHUB_OUTPUT and fetch HIL information
       - id: startup
         run: |
+          # set the project name
           export $(xfp-dev arduino workspace-setup project-name)
-
-          cd /opt/runner_support/
-          REPO="$(basename "$GITHUB_REPOSITORY")"
           echo "project=$PROJECTNAME" >> $GITHUB_OUTPUT
 
-          serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
-          echo "serials=${serials}"  >> $GITHUB_OUTPUT
-
-          ./py_checkusb.py --switch repo --namelist $REPO --onoff on
-
-
+          # set the examples
           declare -a data
           cd $GITHUB_WORKSPACE/src/framework/arduino/
           for x in examples/*;
@@ -65,9 +58,19 @@ jobs:
           export examples=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${data[@]}")
           echo examples="$examples" >> $GITHUB_OUTPUT
 
+          # set the serials
           cd /opt/runner_support/
+          REPO="$(basename "$GITHUB_REPOSITORY")"
+
+          serials=$(echo $(./py_checkusb.py --repo ${REPO} --list serial --json) | jq ".\"${REPO}\"" --compact-output )
+          echo "serials=${serials}"  >> $GITHUB_OUTPUT
+
+          # set the xfp
           xfp=$(./py_checkusb.py --readyaml $GITHUB_WORKSPACE/.github/fqbn.yml --json)
           echo "xfp=${xfp}" >> $GITHUB_OUTPUT
+
+          # switch on the HIL
+          ./py_checkusb.py --switch repo --namelist $REPO --onoff on
 
 
     # Connect the GITHUB_OUTPUT to the variables and the workflow output mechanism
@@ -77,63 +80,62 @@ jobs:
       examples: ${{ steps.startup.outputs.examples }}
       xfp: ${{ steps.startup.outputs.xfp }}
 
-  # #############################################################################
-  # # The build job compiles the sample code for different boards
-  # build-ard:
+  #############################################################################
+  # The build job compiles the sample code for different boards
+  build-ard:
 
-  #   # wait on first setup run before starting main function
-  #   needs: setup
+    # wait on first setup run before starting main function
+    needs: setup
 
-  #   # we run this on self hosted runner, use labels to be more specific
-  #   # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
-  #   runs-on:
-  #     - self-hosted
-  #     - X64
-  #     - Linux
+    # we run this on self hosted runner, use labels to be more specific
+    # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
+    runs-on:
+      - self-hosted
+      - X64
+      - Linux
 
-  #   # which combination of sample code and boards should run
-  #   # for this example of 2 sample codes and 3 boards a total of 2x3=6 runners have to work.
-  #   # if we have only 4 runner then these 4 are started and the last 2 are waiting until they can start
-  #   strategy:
+    # which combination of sample code and boards should run
+    # for this example of 2 sample codes and 3 boards a total of 2x3=6 runners have to work.
+    # if we have only 4 runner then these 4 are started and the last 2 are waiting until they can start
+    strategy:
 
-  #     matrix:
-  #       # List of all examples in the lib to compile
-  #       example: ${{ fromJson(needs.setup.outputs.examples) }}
+      matrix:
+        # List of all examples in the lib to compile
+        example: ${{ fromJson(needs.setup.outputs.examples) }}
 
-  #   # These are the steps which should run for each combination of fqbn and example code
-  #   steps:
-  #     # checkout the latest github action code
-  #     - name: Checkout actions
-  #       uses: actions/checkout@v4
+    # These are the steps which should run for each combination of fqbn and example code
+    steps:
+      # checkout the latest github action code
+      - name: Checkout actions
+        uses: actions/checkout@v4
 
-  #     # checkout the latest arduino-cli compiler
-  #     - name: Setup Arduino CLI
-  #       uses: arduino/setup-arduino-cli@master
+      # checkout the latest arduino-cli compiler
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@master
 
-  #     # prepare the runner for the repo data
-  #     # setup links inside the self hosted runner for correct directory setup
-  #     # REPO is the base name of the library which is linked to the right directory structure
-  #     # check wether the .arduino15 packages dir is available
-  #     # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
-  #     - name: Generate Arduino Library
-  #       run: |
-  #         ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
-  #         mkdir -p "$HOME/Arduino/libraries"
-  #         cd $GITHUB_WORKSPACE/
-  #         xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
+      # prepare the runner for the repo data
+      # setup links inside the self hosted runner for correct directory setup
+      # REPO is the base name of the library which is linked to the right directory structure
+      # check wether the .arduino15 packages dir is available
+      # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
+      - name: Generate Arduino Library
+        run: |
+          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $GITHUB_WORKSPACE/
+          xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
 
-  #     # Compile the sample code for the selected board and board support package with the arduino compiler
-  #     # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
-  #     - name: Compile
-  #       run: |
-  #         echo $HOME 
-  #         export TMPDIR=$HOME/tmp
-  #         mkdir -p $TMPDIR
-  #         cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-  #         xfp=${{ toJson(needs.setup.outputs.xfp) }}
-  #         export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-  #         arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
-
+      # Compile the sample code for the selected board and board support package with the arduino compiler
+      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
+      - name: Compile
+        run: |
+          echo $HOME 
+          export TMPDIR=$HOME/tmp
+          mkdir -p $TMPDIR
+          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          xfp=${{ toJson(needs.setup.outputs.xfp) }}
+          export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
+          arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
 
 
   # #############################################################################
@@ -210,9 +212,8 @@ jobs:
   flash:
 
     # We need a successful build before we can run the deploy
-    #needs: [setup, build-ard]
-    needs: [setup]
-
+    needs: [setup, build-ard]
+    
     # we run this on self hosted runner, use labels to be more specific
     # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
     runs-on:
@@ -240,16 +241,11 @@ jobs:
           PROJECT=${{ needs.setup.outputs.project }}
           SERIALID=${{ matrix.serials }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
-          echo "xfp=${xfp}"
-          echo "one" $(echo ${xfp} | jq ".\"hil\"" -r --compact-output )
-          echo "two" $(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output )
 
-
-
-          PORT=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
-          TYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list type --json) | jq ".\"${SERIALID}\"|.[0]" -r)
+          PORT=$(     echo $(./py_checkusb.py --serial ${SERIALID} --list comport --json) | jq ".\"${SERIALID}\"" -r)
+          TYPE=$(     echo $(./py_checkusb.py --serial ${SERIALID} --list type --json)    | jq ".\"${SERIALID}\"|.[0]" -r)
           DEVTYPE=$(  echo $(./py_checkusb.py --serial ${SERIALID} --list devtype --json) | jq ".\"${SERIALID}\"|.[0]" -r)
-          DEVICE=$(echo $(./py_checkusb.py --serial ${SERIALID} --list device  --json) | jq ".\"${SERIALID}\"|.[0]" -r)
+          DEVICE=$(   echo $(./py_checkusb.py --serial ${SERIALID} --list device  --json) | jq ".\"${SERIALID}\"|.[0]" -r)
           FQBN=`tr '.' ':' <<<"${DEVICE}"`
 
           echo "repo=$REPO" >> $GITHUB_ENV
@@ -290,8 +286,9 @@ jobs:
           arduino-cli compile --clean --log --warnings all \
                               --fqbn ${{ env.fqbn }} \
                               --libraries="." \
-                              --libraries="$HOME/Arduino/libraries/." ${{ env.example }} \
-                              --export-binaries
+                              --libraries="$HOME/Arduino/libraries/." \
+                              --export-binaries \
+                              ${{ env.example }}
 
         # Flashes the compiled HEX file onto the selected MCU
         # REPO: the name of the repository which is also the link name
@@ -303,7 +300,11 @@ jobs:
       - name: Flash
         run: |
           cd $HOME
-          python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py upload -d ${{ env.devtype }} -p ${{ env.port }} -f $HOME/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
+          python $HOME/.arduino15/packages/Infineon/hardware/xmc/3.2.0/tools/xmc-flasher.py \
+                            upload \
+                            -d ${{ env.devtype }} \
+                            -p ${{ env.port }} \
+                            -f $HOME/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/*.hex
 
 
       # Monitoring the serial output from the attached and flashed hardware and collecting
@@ -312,7 +313,10 @@ jobs:
         run: |
           if [ "${{ env.port }}" != 'null' ]; then
             echo "need to monitor"
-            timeout 1m /opt/runner_support/py_console.py --port ${{ env.port }} --baud ${{ env.baud }} --report ${HOME}/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/report.txt
+            timeout 1m /opt/runner_support/py_console.py \
+                          --port ${{ env.port }} \
+                          --baud ${{ env.baud }} \
+                          --report ${HOME}/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/report.txt
           else
             echo "No port found"
           fi
