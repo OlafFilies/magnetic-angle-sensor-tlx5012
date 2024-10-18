@@ -134,74 +134,82 @@ jobs:
           mkdir -p $TMPDIR
           cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
           xfp=${{ toJson(needs.setup.outputs.xfp) }}
-          export fqbn=$(echo ${xfp} | jq ".\"fqbn\"" -r --compact-output )
-          arduino-cli compile ${fqbn} --libraries="." --libraries="$HOME/Arduino/libraries/." ${{ matrix.example }} --verbose
+          export fqbn=$(echo ${xfp} | jq ".\"ard\".\"fqbn\"" -r --compact-output )
+          arduino-cli compile \
+                ${fqbn} \
+                --libraries="." \
+                --libraries="$HOME/Arduino/libraries/." \
+                --verbose \
+                 ${{ matrix.example }}
 
 
-  # #############################################################################
-  # # The build job compiles the sample code for different boards
-  # build-plt:
+  #############################################################################
+  # The build job compiles the sample code for different boards
+  build-plt:
 
-  #   # wait on first setup run before starting main function
-  #   needs: setup
+    # wait on first setup run before starting main function
+    needs: setup
 
-  #   # we run this on self hosted runner, use labels to be more specific
-  #   # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
-  #   runs-on:
-  #     - self-hosted
-  #     - X64
-  #     - Linux
+    # we run this on self hosted runner, use labels to be more specific
+    # add specific names if there are some, otherwise self-hosted, X64, Linux are the default ones
+    runs-on:
+      - self-hosted
+      - X64
+      - Linux
 
-  #   # which combination of sample code and boards should run
-  #   # for this example of 2 sample codes and 3 boards a total of 2x3=6 runners have to work.
-  #   # if we have only 4 runner then these 4 are started and the last 2 are waiting until they can start
-  #   strategy:
+    # which combination of sample code and boards should run
+    # for this example of 2 sample codes and 3 boards a total of 2x3=6 runners have to work.
+    # if we have only 4 runner then these 4 are started and the last 2 are waiting until they can start
+    strategy:
 
-  #     matrix:
-  #       # List of all examples in the lib to compile
-  #       example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
+      matrix:
+        # List of all examples in the lib to compile
+        example: ${{ fromJson(needs.setup.outputs.matrix_example) }}
 
-  #   steps:
-  #     # checkout the latest github action code
-  #     - name: Checkout actions
-  #       uses: actions/checkout@v4
+    steps:
+      # checkout the latest github action code
+      - name: Checkout actions
+        uses: actions/checkout@v4
 
-  #     # checkout the latest arduino-cli compiler
-  #     - name: Setup Arduino CLI
-  #       uses: arduino/setup-arduino-cli@master
+      # checkout the latest arduino-cli compiler
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@master
 
-  #     # prepare the runner for the repo data
-  #     # setup links inside the self hosted runner for correct directory setup
-  #     # REPO is the base name of the library which is linked to the right directory structure
-  #     # check wether the .arduino15 packages dir is available
-  #     # export REPO=${{ needs.setup.outputs.repo }}
-  #     # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
-  #     - name: Set and check environment, install repos
-  #       run: |
-  #         ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
-  #         mkdir -p "$HOME/Arduino/libraries"
-  #         cd $GITHUB_WORKSPACE/
-  #         xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
+      # prepare the runner for the repo data
+      # setup links inside the self hosted runner for correct directory setup
+      # REPO is the base name of the library which is linked to the right directory structure
+      # check wether the .arduino15 packages dir is available
+      # export REPO=${{ needs.setup.outputs.repo }}
+      # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
+      - name: Set and check environment, install repos
+        run: |
+          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
+          mkdir -p "$HOME/Arduino/libraries"
+          cd $GITHUB_WORKSPACE/
+          xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
 
-  #     - name: Install PlatformIO
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install --upgrade platformio
-  #         platformio platform install -f infineonxmc
-  #         platformio platform install -f atmelavr
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+          platformio platform install -f infineonxmc
+          platformio platform install -f atmelavr
 
-  #     # PlatformIO uses python for compiling and it does multiple board compiles
-  #     # at once. PlatformIO is used here to check compatibility, but is not needed for the the flash step
-  #     - name: Run PlatformIO
-  #       run: |
-  #         cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
-  #         # boards="${{ needs.setup.outputs.fqbn_example }}"
-  #         # export board=`echo $boards | perl -pe 's/fqbn\=\w+:\w+:/board /gx'`
-  #         # export board=`echo $board | perl -ne 'print lc'`
-  #         # pio ci --lib="." ${board} --project-option="lib_deps=Wire"
-  #         pio ci --lib="." --board=uno --project-option="lib_deps=Wire"
-  #       env:
-  #         PLATFORMIO_CI_SRC: ${{ matrix.example }}
+      # PlatformIO uses python for compiling and it does multiple board compiles
+      # at once. PlatformIO is used here to check compatibility, but is not needed for the the flash step
+      - name: Run PlatformIO
+        run: |
+          cd $HOME/Arduino/libraries/${{ needs.setup.outputs.project }}
+          xfp=${{ toJson(needs.setup.outputs.xfp) }}
+          export boards=$(echo ${xfp} | jq ".\"pio\".\"boards\"" -r --compact-output )
+          export options=$(echo ${xfp} | jq ".\"pio\".\"options\"" -r --compact-output )
+          pio \
+                ci \
+                --lib="." \
+                ${boards} \
+                ${options}
+        env:
+          PLATFORMIO_CI_SRC: ${{ matrix.example }}
 
 
 
