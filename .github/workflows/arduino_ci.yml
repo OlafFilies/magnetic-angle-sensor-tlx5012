@@ -9,7 +9,6 @@ on:
 jobs:
 
 
-
   #############################################################################
   # This action sets common variables for the flow and
   # identifies the examples to compile
@@ -117,16 +116,16 @@ jobs:
       # setup links inside the self hosted runner for correct directory setup
       # REPO is the base name of the library which is linked to the right directory structure
       # check wether the .arduino15 packages dir is available
-      # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
       - name: Generate Arduino Library
         run: |
-          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
+          if [ ! -d "$HOME/.arduino15/packages/Infineon" ]; then
+            ln -sn /opt/XMC-for-Arduino/hardware $HOME/.arduino15/packages/Infineon
+          fi
           mkdir -p "$HOME/Arduino/libraries"
           cd $GITHUB_WORKSPACE/
           xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
 
       # Compile the sample code for the selected board and board support package with the arduino compiler
-      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
       - name: Compile
         run: |
           echo $HOME 
@@ -180,10 +179,11 @@ jobs:
       # REPO is the base name of the library which is linked to the right directory structure
       # check wether the .arduino15 packages dir is available
       # export REPO=${{ needs.setup.outputs.repo }}
-      # ln -sf $GITHUB_WORKSPACE/$REPO/build/ $HOME/Arduino/libraries/$REPO
       - name: Set and check environment, install repos
         run: |
-          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
+          if [ ! -d "$HOME/.arduino15/packages/Infineon" ]; then
+            ln -sn /opt/XMC-for-Arduino/hardware $HOME/.arduino15/packages/Infineon
+          fi
           mkdir -p "$HOME/Arduino/libraries"
           cd $GITHUB_WORKSPACE/
           xfp-dev arduino workspace-setup --path $HOME/Arduino/libraries
@@ -266,6 +266,7 @@ jobs:
           echo "device=$DEVICE" >> $GITHUB_ENV
           echo "example="$(echo ${xfp} | jq ".\"hil\".\"example\"" -r --compact-output ) >> $GITHUB_ENV
           echo "baud="$(echo ${xfp} | jq ".\"hil\".\"baud\"" -r --compact-output ) >> $GITHUB_ENV
+          echo "timeout="$(echo ${xfp} | jq ".\"hil\".\"timeout\"" -r --compact-output ) >> $GITHUB_ENV
 
           echo "Repository name:     " $REPO
           echo "Project name:        " $PROJECT
@@ -283,12 +284,13 @@ jobs:
       # check/set the arduino15 package library
       # link the repo to the correct place for compiling under arduino-cli
       # compile the code with the arduino-cli and export the binary files for flashing
-      # ln -sf $GITHUB_WORKSPACE/ $HOME/Arduino/libraries/$REPO
       - name: Compile Sketch
         run: |
           export TMPDIR=$HOME/tmp
           mkdir -p $TMPDIR
-          ln -sfn /opt/XMC-for-Arduino $HOME/.arduino15/packages/Infineon
+          if [ ! -d "$HOME/.arduino15/packages/Infineon" ]; then
+            ln -sn /opt/XMC-for-Arduino/hardware $HOME/.arduino15/packages/Infineon
+          fi
           mkdir -p "$HOME/Arduino/libraries"
           cd $HOME/Arduino/libraries/${{ env.project }}
           arduino-cli compile --clean --log --warnings all \
@@ -324,7 +326,7 @@ jobs:
             timeout 1m /opt/runner_support/py_console.py \
                           --port ${{ env.port }} \
                           --baud ${{ env.baud }} \
-                          --runtime 20 \
+                          --runtime ${{ env.timeout }} \
                           --report ~/Arduino/libraries/${{ env.project }}/${{ env.example }}/build/${{ env.device }}/report.json
           else
             echo "No port found"
